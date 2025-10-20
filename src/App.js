@@ -9,13 +9,13 @@ import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 
 // Pages
-import Home from './pages/Home';
-import Destinations from './pages/Destinations';
-import Tours from './pages/Tours';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import Home from './pages/public/Home';
+import Destinations from './pages/public/Destinations';
+import Tours from './pages/public/Tours';
+import About from './pages/public/About';
+import Contact from './pages/public/Contact';
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
 
 function App() {
   return (

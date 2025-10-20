@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Hero from '../components/Hero';
+import Hero from '../../components/Hero';
 import { TextField, MenuItem, Select, FormControl } from '@mui/material';
 import { Search } from '@mui/icons-material';
 
