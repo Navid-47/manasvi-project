@@ -172,7 +172,10 @@ const Login = () => {
               href="#" 
               variant="body2" 
               sx={{ color: 'var(--brand)' }}
-              onClick={(e) => e.preventDefault()}
+              onClick={(e) => {
+                e.preventDefault();
+                navigate('/forgot-password');
+              }}
               className="text-hover"
             >
               Forgot password?
