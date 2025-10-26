@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Hero from '../../components/Hero';
 import { TextField, MenuItem, Select, FormControl } from '@mui/material';
 import { Search } from '@mui/icons-material';
+import { Link } from 'react-router-dom';
 
 const Home = () => {
   const [destination, setDestination] = useState('');
@@ -156,13 +157,13 @@ const Home = () => {
 
   return (
     <div>
-      <Hero 
+      <Hero
         title="Discover Amazing Destinations"
         subtitle="Experience the world with our curated travel packages and unforgettable adventures"
         ctaText="Explore Tours"
         ctaLink="/tours"
       />
-      
+
       {/* Search Section */}
       <section className="py-16 bg-bg -mt-20 relative z-10">
         <div className="container mx-auto px-4">
@@ -248,8 +249,8 @@ const Home = () => {
                   </div>
                 </div>
                 <div className="md:col-span-5 flex justify-center mt-2">
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     className="bg-gradient-to-r from-brand to-blue-700 hover:from-brand-dark hover:to-blue-800 text-white font-bold py-4 px-10 rounded-full transition duration-300 flex items-center shadow-lg hover:shadow-xl transform hover:-translate-y-1 w-full md:w-auto justify-center animate-pulse-slow"
                   >
                     <Search className="mr-2" />
@@ -275,9 +276,9 @@ const Home = () => {
             {featuredDestinations.map((destination) => (
               <div key={destination.id} className="bg-white rounded-xl overflow-hidden shadow-lg transition-all duration-300 hover-card">
                 <div className="relative">
-                  <img 
-                    src={destination.image} 
-                    alt={destination.name} 
+                  <img
+                    src={destination.image}
+                    alt={destination.name}
                     className="w-full h-60 object-cover img-hover"
                   />
                   <div className="absolute top-4 right-4 bg-brand text-white px-3 py-1 rounded-full text-sm font-bold animate-bounce-in">
@@ -318,9 +319,13 @@ const Home = () => {
             ))}
           </div>
           <div className="text-center mt-12 animate-fade-in-delay">
-            <button className="border-2 border-brand text-brand hover:bg-brand hover:text-white font-bold py-3 px-8 rounded-lg transition duration-300 hover-brand">
+            <Link
+              to="/destinations"
+              className="inline-block border-2 border-brand text-brand hover:bg-brand hover:text-white font-bold py-3 px-8 rounded-lg transition duration-300 hover-brand no-underline"
+              aria-label="View all destinations"
+            >
               View All Destinations
-            </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -361,9 +366,9 @@ const Home = () => {
             {testimonials.map((testimonial) => (
               <div key={testimonial.id} className="bg-bg p-6 rounded-xl shadow-md transition-all duration-300 hover-card animate-slide-in-left">
                 <div className="flex items-center mb-4">
-                  <img 
-                    src={testimonial.image} 
-                    alt={testimonial.name} 
+                  <img
+                    src={testimonial.image}
+                    alt={testimonial.name}
                     className="w-12 h-12 rounded-full mr-4 img-hover"
                   />
                   <div>
@@ -374,10 +379,10 @@ const Home = () => {
                 </div>
                 <div className="flex mb-3">
                   {[...Array(5)].map((_, i) => (
-                    <svg 
-                      key={i} 
-                      className={`w-5 h-5 ${i < testimonial.rating ? 'text-yellow-400' : 'text-gray-300'}`} 
-                      fill="currentColor" 
+                    <svg
+                      key={i}
+                      className={`w-5 h-5 ${i < testimonial.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                      fill="currentColor"
                       viewBox="0 0 20 20"
                     >
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
