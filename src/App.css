@@ -1,3 +1,6 @@
+/* src/App.css */
+
+/* Existing CRA defaults (kept) */
 .App {
   text-align: center;
 }
@@ -29,10 +32,54 @@
 }
 
 @keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ------------------------------ */
+/* Added: subtle animation helpers */
+/* ------------------------------ */
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 300ms ease both;
+}
+
+@keyframes slide-in-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-in-down {
+  animation: slide-in-down 300ms ease both;
+}
+
+@keyframes slide-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-in-up {
+  animation: slide-in-up 400ms ease both;
+}
+
+/* Small hover scale utility used across UI */
+.hover-scale {
+  transition: transform 200ms ease;
+}
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-slide-in-down,
+  .animate-slide-in-up {
+    animation: none !important;
   }
-  to {
-    transform: rotate(360deg);
+  .hover-scale:hover {
+    transform: none !important;
   }
 }

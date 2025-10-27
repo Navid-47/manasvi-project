@@ -55,9 +55,14 @@ const Login = () => {
       // In a real app, you would authenticate the user here
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // For demo purposes, we'll just navigate to home
-      console.log('Login attempt with:', { email, password });
-      navigate('/');
+      // Demo auth: set user in localStorage and redirect based on role
+      const role = email.trim().toLowerCase() === 'admin@travelmanasvi.com' ? 'admin' : 'user';
+      const userName = email.split('@')[0] || 'User';
+      localStorage.setItem('tm_user', JSON.stringify({ email, role, userName }));
+
+      const target = role === 'admin' ? '/admin-dashboard' : '/user-dashboard';
+      console.log('Login success →', { email, role, target });
+      navigate(target, { state: { loginSuccess: true, userName } });
     } catch (error) {
       setLoginError('Invalid email or password. Please try again.');
     } finally {
