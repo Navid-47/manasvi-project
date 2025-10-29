@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Hero from '../../components/Hero';
 import { TextField, MenuItem, Select, FormControl } from '@mui/material';
 import { Search } from '@mui/icons-material';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Home = () => {
   const [destination, setDestination] = useState('');
@@ -10,6 +10,8 @@ const Home = () => {
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [animatedSections, setAnimatedSections] = useState([]);
+  const [slideshowTick, setSlideshowTick] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Animate sections on scroll
@@ -25,6 +27,12 @@ const Home = () => {
     sections.forEach(section => observer.observe(section));
 
     return () => observer.disconnect();
+  }, []);
+
+  // Global slideshow tick (every 5 seconds) for Home cards
+  useEffect(() => {
+    const id = setInterval(() => setSlideshowTick((t) => t + 1), 5000);
+    return () => clearInterval(id);
   }, []);
 
   const destinations = [
@@ -48,8 +56,13 @@ const Home = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // In a real app, you would handle the search here
-    console.log('Search submitted:', { destination, travelers, checkIn, checkOut });
+    const chosen = destinations.find(d => d.value === destination);
+    const query = new URLSearchParams();
+    if (chosen) {
+      query.set('q', chosen.label.split(',')[0]);
+    }
+    query.set('sort', 'ratingDesc');
+    navigate(`/destinations?${query.toString()}`);
   };
 
   // Enhanced destination data with more details
@@ -59,6 +72,13 @@ const Home = () => {
       name: 'Swiss Alps',
       country: 'Switzerland',
       image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80',
+      images: [
+        'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1526498460520-4c246339dccb?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1200&q=80'
+      ],
       description: 'Experience the breathtaking beauty of the Swiss Alps with our guided tours through majestic mountains, crystal-clear lakes, and charming villages.',
       price: 120000,
       rating: 4.8,
@@ -70,6 +90,13 @@ const Home = () => {
       name: 'Bali Beaches',
       country: 'Indonesia',
       image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80',
+      images: [
+        'https://images.unsplash.com/photo-1518544801976-3e7231347b02?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1508182311256-e3f7d50b9b64?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1512295767273-ac109ac3acfa?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1500530855697-0177331693ae?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=80'
+      ],
       description: 'Relax on the pristine beaches of Bali with our all-inclusive package featuring luxury accommodations, cultural experiences, and water activities.',
       price: 95000,
       rating: 4.9,
@@ -81,6 +108,13 @@ const Home = () => {
       name: 'Taj Mahal & Agra',
       country: 'India',
       image: 'https://images.unsplash.com/photo-1564507593976-8a5f0f1d2b5a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80',
+      images: [
+        'https://upload.wikimedia.org/wikipedia/commons/1/1d/Taj_Mahal%2C_Agra%2C_India_edit3.jpg',
+        'https://images.unsplash.com/photo-1544989164-31dc3c645987?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1543164904-8b717b7cbf9b?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1585475964746-1dfeadfde94e?auto=format&fit=crop&w=1200&q=80'
+      ],
       description: 'Experience the architectural marvel of the Taj Mahal, one of the Seven Wonders of the World, along with other historical monuments in Agra.',
       price: 45000,
       rating: 4.8,
@@ -277,9 +311,19 @@ const Home = () => {
               <div key={destination.id} className="bg-white rounded-xl overflow-hidden shadow-lg transition-all duration-300 hover-card">
                 <div className="relative">
                   <img
-                    src={destination.image}
+                    src={(() => {
+                      const arr = destination.images && destination.images.length ? Array.from(new Set(destination.images)) : [destination.image];
+                      return arr[slideshowTick % arr.length];
+                    })()}
                     alt={destination.name}
                     className="w-full h-60 object-cover img-hover"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      const arr = destination.images && destination.images.length ? Array.from(new Set(destination.images)) : [];
+                      const next = arr.length > 1 ? arr[(slideshowTick + 1) % arr.length] : null;
+                      const coverOk = destination.image && (!arr.length || !arr.includes(destination.image));
+                      e.currentTarget.src = next || (coverOk ? destination.image : 'https://images.unsplash.com/photo-1503342217505-b0a15cf70489?auto=format&fit=crop&w=1200&q=80');
+                    }}
                   />
                   <div className="absolute top-4 right-4 bg-brand text-white px-3 py-1 rounded-full text-sm font-bold animate-bounce-in">
                     Featured
@@ -305,7 +349,7 @@ const Home = () => {
                     <div className="flex items-center rating-stars">
                       {[...Array(5)].map((_, i) => (
                         <svg key={i} className={`w-5 h-5 ${i < Math.floor(destination.rating) ? 'text-yellow-400' : 'text-gray-300'} fill-current`} viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                         </svg>
                       ))}
                       <span className="ml-2 text-text-muted rating-value">{destination.rating}</span>
