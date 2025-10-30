@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+ import React, { useState } from 'react';
 import {
   Drawer,
   List,
@@ -31,7 +31,6 @@ export default function Sidebar({ onLogout }) {
     { to: '/user-dashboard/wallet', icon: <ReceiptLongIcon />, label: 'My Wallet' },
   ];
 
-  // Logout handler
   const handleLogout = () => {
     try {
       localStorage.removeItem('tm_user');
@@ -101,8 +100,6 @@ export default function Sidebar({ onLogout }) {
               </ListItemButton>
             </Tooltip>
           ))}
-
-          {/* Logout Button */}
           <Tooltip title={!isExpanded ? 'Logout' : ''} placement="right" arrow>
             <ListItemButton
               onClick={handleLogout}
