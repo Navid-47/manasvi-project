@@ -1,16 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { AppBar, Toolbar, IconButton, Drawer, List, ListItem, ListItemText, TextField } from '@mui/material';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { AppBar, Toolbar, IconButton, Drawer, List, ListItem, ListItemText, TextField, Avatar, Menu, MenuItem, Divider, Tooltip, Box, Typography } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [anchorEl, setAnchorEl] = useState(null);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const handleScroll = () => {
     if (window.scrollY > 10) {
@@ -40,6 +43,48 @@ const Navbar = () => {
     console.log('Searching for:', searchTerm);
     setSearchOpen(false);
     setSearchTerm('');
+  };
+
+  // Check if user is logged in
+  const stored = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('tm_user')) || null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const isLoggedIn = !!stored;
+  const displayName = stored?.userName || 'User';
+  const initials = displayName
+    .split('.')
+    .join(' ')
+    .split(/\s+/)
+    .map((s) => s[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
+  const openMenu = Boolean(anchorEl);
+  const handleMenuOpen = (e) => setAnchorEl(e.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
+
+  const handleDashboard = () => {
+    handleMenuClose();
+    navigate('/user-dashboard');
+  };
+
+  const handleMyProfile = () => {
+    handleMenuClose();
+    navigate('/user-dashboard/profile');
+  };
+
+  const handleLogout = () => {
+    handleMenuClose();
+    try {
+      localStorage.removeItem('tm_user');
+    } catch {}
+    navigate('/login', { replace: true, state: { loggedOut: true } });
   };
 
   const navLinks = [
@@ -98,12 +143,58 @@ const Navbar = () => {
             >
               <SearchIcon />
             </IconButton>
-            <Link
-              to="/login"
-              className="bg-brand text-white px-6 py-2 rounded-lg hover:bg-brand-dark transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5 shadow-md hover:shadow-lg no-underline"
-            >
-              Book Now
-            </Link>
+            {/* Show Profile Menu if logged in, otherwise show Book Now */}
+            {isLoggedIn ? (
+              <Box className="flex items-center gap-2">
+                <Tooltip title={displayName}>
+                  <IconButton
+                    onClick={handleMenuOpen}
+                    size="small"
+                    className="hover-scale"
+                  >
+                    <Avatar sx={{ width: 36, height: 36, bgcolor: 'var(--brand)' }}>
+                      {initials}
+                    </Avatar>
+                  </IconButton>
+                </Tooltip>
+                <IconButton
+                  onClick={handleMenuOpen}
+                  className="text-text hover:text-brand transition-all duration-300"
+                  size="small"
+                >
+                  <ArrowDropDownIcon />
+                </IconButton>
+                <Menu
+                  anchorEl={anchorEl}
+                  open={openMenu}
+                  onClose={handleMenuClose}
+                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                >
+                  <Box px={2} py={1}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                      {displayName}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Customer Dashboard
+                    </Typography>
+                  </Box>
+                  <Divider />
+                  <MenuItem onClick={handleDashboard}>Dashboard</MenuItem>
+                  <MenuItem onClick={handleMyProfile}>My Profile</MenuItem>
+                  <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
+                    Logout
+                  </MenuItem>
+                </Menu>
+              </Box>
+            ) : (
+              <Link 
+                to="/login" 
+                className="bg-brand text-white px-6 py-2 rounded-lg hover:bg-brand-dark transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5 shadow-md hover:shadow-lg no-underline"
+              >
+                Book Now
+              </Link>
+            )}
           </div>
 
           <div className="flex items-center md:hidden">
@@ -200,6 +291,17 @@ const Navbar = () => {
               <CloseIcon />
             </IconButton>
           </div>
+          
+          {/* Profile Inline if logged in */}
+          {isLoggedIn && (
+            <div className="flex items-center gap-3">
+              <Avatar sx={{ bgcolor: '#fff', color: 'var(--brand)' }}>{initials}</Avatar>
+              <div>
+                <div className="font-semibold">{displayName}</div>
+                <div className="text-white/80 text-sm">Customer</div>
+              </div>
+            </div>
+          )}
         </div>
 
         <List>
@@ -220,9 +322,54 @@ const Navbar = () => {
               />
             </ListItem>
           ))}
-          <ListItem button className="bg-brand text-white mx-4 mt-4 rounded transition-all duration-300 transform hover:scale-105 hover:bg-brand-dark hover:-translate-y-0.5 shadow-md hover:shadow-lg">
-            <ListItemText primary="Book Now" />
-          </ListItem>
+          
+          <Divider sx={{ my: 1 }} />
+          
+          {/* Show profile options if logged in, otherwise show Book Now */}
+          {isLoggedIn ? (
+            <>
+              <ListItem
+                button
+                onClick={() => {
+                  handleDrawerToggle();
+                  navigate('/user-dashboard');
+                }}
+                className="mx-2 rounded transition-all duration-300 transform hover:scale-105 hover:bg-brand/10"
+              >
+                <ListItemText primary="Dashboard" />
+              </ListItem>
+              <ListItem
+                button
+                onClick={() => {
+                  handleDrawerToggle();
+                  navigate('/user-dashboard/profile');
+                }}
+                className="mx-2 rounded transition-all duration-300 transform hover:scale-105 hover:bg-brand/10"
+              >
+                <ListItemText primary="My Profile" />
+              </ListItem>
+              <ListItem
+                button
+                onClick={() => {
+                  handleDrawerToggle();
+                  handleLogout();
+                }}
+                className="mx-2 rounded transition-all duration-300 transform hover:scale-105 hover:bg-brand/10"
+              >
+                <ListItemText primary="Logout" />
+              </ListItem>
+            </>
+          ) : (
+            <ListItem 
+              button 
+              component={Link}
+              to="/login"
+              onClick={handleDrawerToggle}
+              className="bg-brand text-white mx-4 mt-4 rounded transition-all duration-300 transform hover:scale-105 hover:bg-brand-dark hover:-translate-y-0.5 shadow-md hover:shadow-lg"
+            >
+              <ListItemText primary="Book Now" />
+            </ListItem>
+          )}
         </List>
 
         <div className="p-4">

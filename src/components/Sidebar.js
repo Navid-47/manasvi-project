@@ -1,59 +1,133 @@
-import React from 'react';
-import { Drawer, List, ListItemButton, ListItemText, ListItemIcon, Toolbar, Box, Typography } from '@mui/material';
+ import React, { useState } from 'react';
+import {
+  Drawer,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Toolbar,
+  Box,
+  Tooltip,
+} from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-import EventSeatIcon from '@mui/icons-material/EventSeat';
-import PaymentIcon from '@mui/icons-material/Payment';
+import EventNoteIcon from '@mui/icons-material/EventNote';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import PersonIcon from '@mui/icons-material/Person';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { NavLink, useNavigate } from 'react-router-dom';
 
-const defaultItems = [
-  { label: 'Dashboard', path: '/user-dashboard', icon: <DashboardIcon /> },
-  { label: 'My Bookings', path: '/user-dashboard/bookings', icon: <EventSeatIcon /> },
-  { label: 'Payment History', path: '/user-dashboard/payments', icon: <PaymentIcon /> },
-  { label: 'Profile', path: '/user-dashboard/profile', icon: <PersonIcon /> },
-];
+const collapsedWidth = 72;
+const expandedWidth = 260;
 
-const Sidebar = ({ open = true, width = 260, items = defaultItems, currentPath = '/', onNavigate }) => {
+export default function Sidebar({ onLogout }) {
+  const navigate = useNavigate();
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const items = [
+    { to: '/user-dashboard/profile', icon: <PersonIcon />, label: 'Profile' },
+    { to: '/user-dashboard', icon: <DashboardIcon />, label: 'Overview' },
+    { to: '/user-dashboard/bookings', icon: <EventNoteIcon />, label: 'My Bookings' },
+    { to: '/user-dashboard/payments', icon: <ReceiptLongIcon />, label: 'Payment History' },
+    { to: '/user-dashboard/wallet', icon: <ReceiptLongIcon />, label: 'My Wallet' },
+  ];
+
+  const handleLogout = () => {
+    try {
+      localStorage.removeItem('tm_user');
+    } catch {
+      /* ignore */
+    }
+    if (onLogout) onLogout();
+    navigate('/login');
+  };
+
   return (
     <Drawer
       variant="permanent"
-      open={open}
-      PaperProps={{ sx: { width, borderRight: '1px solid var(--border)' } }}
+      onMouseEnter={() => setIsExpanded(true)}
+      onMouseLeave={() => setIsExpanded(false)}
+      sx={{
+        width: isExpanded ? expandedWidth : collapsedWidth,
+        flexShrink: 0,
+        transition: 'width 0.3s ease',
+        '& .MuiDrawer-paper': {
+          width: isExpanded ? expandedWidth : collapsedWidth,
+          boxSizing: 'border-box',
+          borderRight: '1px solid var(--border)',
+          backgroundColor: 'var(--surface)',
+          position: 'relative',
+          height: 'calc(100vh - 64px)',
+          top: 10,
+          transition: 'width 0.3s ease',
+          overflowX: 'hidden',
+        },
+      }}
     >
       <Toolbar />
-      <Box className="px-4 py-3">
-        <div className="flex items-center mb-4">
-          <div className="w-8 h-8 rounded-full bg-brand flex items-center justify-center mr-2">
-            <span className="text-white font-bold text-sm">TM</span>
-          </div>
-        </div>
-        <Typography variant="subtitle2" className="text-text-muted mb-3">Menu</Typography>
+      <Box sx={{ overflow: 'hidden', py: 1 }}>
         <List>
-          {items.map((item) => {
-            const active = currentPath === item.path;
-            return (
+          {items.map((item) => (
+            <Tooltip
+              key={item.to}
+              title={!isExpanded ? item.label : ''}
+              placement="right"
+              arrow
+            >
               <ListItemButton
-                key={item.path}
-                onClick={() => onNavigate?.(item.path)}
-                selected={active}
+                component={NavLink}
+                to={item.to}
                 sx={{
-                  borderRadius: '10px',
-                  mb: 0.5,
-                  '&.Mui-selected': { backgroundColor: 'rgba(0,123,255,0.12)' },
-                  '&:hover': { backgroundColor: 'rgba(0,123,255,0.08)' },
+                  borderRadius: 'var(--radius)',
+                  mx: 1,
+                  my: 0.5,
+                  justifyContent: isExpanded ? 'initial' : 'center',
+                  '&.active': {
+                    backgroundColor: 'rgba(var(--brand-rgb), 0.08)',
+                    color: 'var(--brand)',
+                  },
                 }}
               >
-                {item.icon ? <ListItemIcon sx={{ minWidth: 36, color: active ? 'var(--brand)' : 'inherit' }}>{item.icon}</ListItemIcon> : null}
-                <ListItemText
-                  primary={item.label}
-                  primaryTypographyProps={{ fontWeight: active ? 700 : 500, color: active ? 'var(--brand)' : 'inherit' }}
-                />
+                <ListItemIcon
+                  sx={{
+                    minWidth: isExpanded ? 40 : 'auto',
+                    color: 'inherit',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                {isExpanded && <ListItemText primary={item.label} />}
               </ListItemButton>
-            );
-          })}
+            </Tooltip>
+          ))}
+          <Tooltip title={!isExpanded ? 'Logout' : ''} placement="right" arrow>
+            <ListItemButton
+              onClick={handleLogout}
+              sx={{
+                borderRadius: 'var(--radius)',
+                mx: 1,
+                my: 0.5,
+                color: 'var(--error)',
+                justifyContent: isExpanded ? 'initial' : 'center',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 0, 0, 0.08)',
+                },
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  minWidth: isExpanded ? 40 : 'auto',
+                  color: 'inherit',
+                  justifyContent: 'center',
+                }}
+              >
+                <LogoutIcon />
+              </ListItemIcon>
+              {isExpanded && <ListItemText primary="Logout" />}
+            </ListItemButton>
+          </Tooltip>
         </List>
       </Box>
     </Drawer>
   );
-};
-
-export default Sidebar;
+}
