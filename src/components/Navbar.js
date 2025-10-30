@@ -4,6 +4,7 @@ import { AppBar, Toolbar, IconButton, Drawer, List, ListItem, ListItemText, Text
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
+import NotificationBell from './NotificationBell';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
 const Navbar = () => {
@@ -95,6 +96,11 @@ const Navbar = () => {
     { text: 'Contact', path: '/contact' }
   ];
 
+  const sampleNotifications = [
+    { id: 1, title: 'Your booking was confirmed', time: '2h ago', read: false },
+    { id: 2, title: 'Payment received', time: 'Yesterday', read: true },
+  ];
+
   return (
     <>
       <AppBar
@@ -143,6 +149,10 @@ const Navbar = () => {
             >
               <SearchIcon />
             </IconButton>
+            <NotificationBell
+              notifications={sampleNotifications}
+              onReadAll={() => {}}
+            />
             {/* Show Profile Menu if logged in, otherwise show Book Now */}
             {isLoggedIn ? (
               <Box className="flex items-center gap-2">
