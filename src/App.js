@@ -28,14 +28,20 @@ import PaymentHistory from './pages/customer/PaymentHistory';
 import Profile from './pages/customer/Profile';
 import Wallet from './pages/customer/Wallet';
 
-// Admin (optional – unchanged)
+// Admin (mirrors customer dashboard pattern)
+import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/Dashboard';
+import ManageBookings from './pages/admin/ManageBookings';
+import ManagePackages from './pages/admin/ManagePackages';
+import PaymentReports from './pages/admin/PaymentReports';
+import SalesAnalytics from './pages/admin/SalesAnalytics';
 
 function AppContent() {
   const location = useLocation();
-  // Hide the public Navbar/Footer on customer dashboard routes
+  // Hide the public Navbar/Footer on customer and admin dashboard routes
   const isCustomerDashboard = location.pathname.startsWith('/user-dashboard');
-  const showPublicShell = !isCustomerDashboard;
+  const isAdminDashboard = location.pathname.startsWith('/admin-dashboard');
+  const showPublicShell = !(isCustomerDashboard || isAdminDashboard);
 
   return (
     <div className="App flex flex-col min-h-screen">
@@ -53,8 +59,14 @@ function AppContent() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
-          {/* Admin (unchanged – if your admin has its own layout, you can also hide the public shell similarly) */}
-          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          {/* Admin Dashboard (renders its own AdminLayout + Sidebar + Footer) */}
+          <Route path="/admin-dashboard" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard standalone={false} />} />
+            <Route path="bookings" element={<ManageBookings standalone={false} />} />
+            <Route path="packages" element={<ManagePackages standalone={false} />} />
+            <Route path="payments" element={<PaymentReports standalone={false} />} />
+            <Route path="analytics" element={<SalesAnalytics standalone={false} />} />
+          </Route>
 
           {/* Customer Dashboard (renders its own CustomerNavbar + Footer) */}
           <Route path="/user-dashboard" element={<Dashboard />}>
