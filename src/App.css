@@ -3,6 +3,7 @@
 /* Existing CRA defaults (kept) */
 .App {
   text-align: center;
+  background: transparent;
 }
 
 .App-logo {
@@ -83,3 +84,5 @@
     transform: none !important;
   }
 }
+
+/* Global background removed; background now limited to admin layout only */
