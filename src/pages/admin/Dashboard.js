@@ -18,49 +18,8 @@ import {
   Grow,
 } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
-
-function useLocalStorage(key, initialValue) {
-  const [value, setValue] = React.useState(() => {
-    try {
-      const stored = localStorage.getItem(key);
-      return stored ? JSON.parse(stored) : initialValue;
-    } catch {
-      return initialValue;
-    }
-  });
-  React.useEffect(() => {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch {
-      // ignore
-    }
-  }, [key, value]);
-  return [value, setValue];
-}
-
-function getSeededData() {
-  // Seed minimal data for first-time dashboard view
-  const now = new Date();
-  const months = Array.from({ length: 6 }).map((_, i) => {
-    const d = new Date(now);
-    d.setMonth(now.getMonth() - (5 - i));
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-  });
-  return {
-    bookings: [
-      { id: 'B-1006', customer: 'Aarav Shah', status: 'Confirmed', amount: 1299, createdAt: new Date().toISOString() },
-      { id: 'B-1005', customer: 'Isha Verma', status: 'Pending', amount: 799, createdAt: new Date(Date.now() - 86400000).toISOString() },
-      { id: 'B-1004', customer: 'Rohan Mehta', status: 'Cancelled', amount: 0, createdAt: new Date(Date.now() - 2*86400000).toISOString() },
-      { id: 'B-1003', customer: 'Neha Gupta', status: 'Confirmed', amount: 1599, createdAt: new Date(Date.now() - 4*86400000).toISOString() },
-    ],
-    revenueSeries: months.map((m, idx) => ({ month: m, revenue: 8000 + idx * 1200 + (idx % 2 ? 500 : -300) })),
-    packages: [
-      { id: 'P-2003', name: 'Goa Getaway', price: 499, active: true },
-      { id: 'P-2002', name: 'Himalayan Trek', price: 899, active: true },
-      { id: 'P-2001', name: 'Rajasthan Heritage', price: 699, active: false },
-    ],
-  };
-}
+import { getAllBookings } from '../../services/bookingService';
+import { getAllPackages } from '../../services/packageService';
 
 function MiniAreaChart({ series }) {
   const max = Math.max(...series.map(p => p.revenue), 1);
@@ -78,22 +37,50 @@ function MiniAreaChart({ series }) {
   );
 }
 
+function buildRevenueSeries(bookings) {
+  const now = new Date();
+  const months = Array.from({ length: 6 }).map((_, i) => {
+    const d = new Date(now);
+    d.setMonth(now.getMonth() - (5 - i));
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+
+  const totals = months.reduce((acc, m) => {
+    acc[m] = 0;
+    return acc;
+  }, {});
+
+  bookings.forEach((b) => {
+    if (b.status !== 'Confirmed' || !b.createdAt) return;
+    const d = new Date(b.createdAt);
+    if (Number.isNaN(d.getTime())) return;
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    if (Object.prototype.hasOwnProperty.call(totals, key)) {
+      totals[key] += Number(b.amount) || 0;
+    }
+  });
+
+  return months.map((m) => ({ month: m, revenue: totals[m] || 0 }));
+}
+
 export default function AdminDashboard({ standalone = true }) {
   const location = useLocation();
   const navigate = useNavigate();
   const loginSuccess = location.state?.loginSuccess;
   const userName = location.state?.userName || 'Admin';
 
-  const [seeded] = React.useState(() => getSeededData());
-  const [bookings] = useLocalStorage('admin_bookings', seeded.bookings);
-  const [packages] = useLocalStorage('admin_packages', seeded.packages);
-  const [revenueSeries] = useLocalStorage('admin_revenue_series', seeded.revenueSeries);
+  const bookings = getAllBookings();
+  const packages = getAllPackages();
+  const revenueSeries = buildRevenueSeries(bookings);
 
   const totalRevenue = bookings.filter(b => b.status === 'Confirmed').reduce((s, b) => s + (b.amount || 0), 0);
   const pendingCount = bookings.filter(b => b.status === 'Pending').length;
   const activePackages = packages.filter(p => p.active).length;
 
-  const recent = [...bookings].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
+  const recent = [...bookings]
+    .filter((b) => b.createdAt)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 5);
 
   return (
     <Box sx={{ minHeight: 'calc(100vh - 120px)', backgroundColor: 'var(--bg)' }}>
@@ -224,8 +211,8 @@ export default function AdminDashboard({ standalone = true }) {
                 {recent.map(b => (
                   <ListItem key={b.id}>
                     <ListItemText
-                      primary={`${b.id} • ₹${b.amount}`}
-                      secondary={`${b.customer} • ${new Date(b.createdAt).toLocaleDateString()} • ${b.status}`}
+                      primary={`${b.id} • ₹${(Number(b.amount) || 0).toLocaleString()}`}
+                      secondary={`${b.packageName || 'Travel Package'} • ${new Date(b.createdAt).toLocaleDateString()} • ${b.status}`}
                     />
                   </ListItem>
                 ))}

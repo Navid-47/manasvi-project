@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { TextField, Button, Link, Box, Alert, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { Email, Lock } from '@mui/icons-material';
+import { useAuth } from '../../context/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -11,6 +12,7 @@ const Login = () => {
   const [loginError, setLoginError] = useState('');
   const [animatedSections, setAnimatedSections] = useState([]);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   useEffect(() => {
     // Animate sections on load
@@ -55,10 +57,11 @@ const Login = () => {
       // In a real app, you would authenticate the user here
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Demo auth: set user in localStorage and redirect based on role
+      // Demo auth: use AuthContext and redirect based on role
       const role = email.trim().toLowerCase() === 'admin@travelmanasvi.com' ? 'admin' : 'user';
       const userName = email.split('@')[0] || 'User';
-      localStorage.setItem('tm_user', JSON.stringify({ email, role, userName }));
+
+      login({ email, role, userName });
 
       const target = role === 'admin' ? '/admin-dashboard' : '/user-dashboard';
       console.log('Login success →', { email, role, target });

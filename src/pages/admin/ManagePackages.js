@@ -24,23 +24,10 @@ import {
   Snackbar,
   Alert,
 } from '@mui/material';
-
-function useLocalStorage(key, initialValue) {
-  const [value, setValue] = React.useState(() => {
-    try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : initialValue; } catch { return initialValue; }
-  });
-  React.useEffect(() => { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} }, [key, value]);
-  return [value, setValue];
-}
-
-const seeded = [
-  { id: 'P-2003', name: 'Goa Getaway', price: 499, duration: '3N/4D', active: true, imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600' },
-  { id: 'P-2002', name: 'Himalayan Trek', price: 899, duration: '6N/7D', active: true, imageUrl: 'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=600' },
-  { id: 'P-2001', name: 'Rajasthan Heritage', price: 699, duration: '4N/5D', active: false, imageUrl: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600' },
-];
+import { getAllPackages, savePackages } from '../../services/packageService';
 
 export default function ManagePackages({ standalone = true }) {
-  const [packages, setPackages] = useLocalStorage('admin_packages', seeded);
+  const [packages, setPackages] = React.useState(() => getAllPackages());
   const [query, setQuery] = React.useState('');
   const [debouncedQuery, setDebouncedQuery] = React.useState('');
   const [dialog, setDialog] = React.useState({ open: false, editing: null });
@@ -57,7 +44,7 @@ export default function ManagePackages({ standalone = true }) {
     return () => clearTimeout(t);
   }, [query]);
 
-  const filtered = packages.filter(p => p.name.toLowerCase().includes(debouncedQuery.toLowerCase()));
+  const filtered = packages.filter((p) => (p.name || '').toLowerCase().includes(debouncedQuery.toLowerCase()));
 
   const sortComparator = (a, b) => {
     const av = a[orderBy];
@@ -74,28 +61,21 @@ export default function ManagePackages({ standalone = true }) {
   const sorted = [...filtered].sort(sortComparator);
   const paged = sorted.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
-  // Migrate existing stored packages to include imageUrl when missing
-  React.useEffect(() => {
-    const needsUpdate = packages.some(p => !p.imageUrl);
-    if (needsUpdate) {
-      const withImages = packages.map((p) => ({
-        ...p,
-        imageUrl: p.imageUrl ||
-          (p.name?.toLowerCase().includes('goa')
-            ? 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600'
-            : p.name?.toLowerCase().includes('himalayan') || p.name?.toLowerCase().includes('trek')
-            ? 'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=600'
-            : p.name?.toLowerCase().includes('rajasthan') || p.name?.toLowerCase().includes('heritage')
-            ? 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600'
-            : 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600'),
-      }));
-      setPackages(withImages);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const openCreate = () => {
+    setForm({ name: '', price: '', duration: '', active: true, imageUrl: '' });
+    setDialog({ open: true, editing: null });
+  };
 
-  const openCreate = () => { setForm({ name: '', price: '', duration: '', active: true, imageUrl: '' }); setDialog({ open: true, editing: null }); };
-  const openEdit = (pkg) => { setForm({ name: pkg.name, price: String(pkg.price), duration: pkg.duration, active: pkg.active, imageUrl: pkg.imageUrl || '' }); setDialog({ open: true, editing: pkg }); };
+  const openEdit = (pkg) => {
+    setForm({
+      name: pkg.name || '',
+      price: String(pkg.price ?? ''),
+      duration: pkg.duration || '',
+      active: pkg.active ?? true,
+      imageUrl: pkg.imageUrl || pkg.image || (Array.isArray(pkg.images) && pkg.images[0]) || '',
+    });
+    setDialog({ open: true, editing: pkg });
+  };
   const closeDialog = () => setDialog({ open: false, editing: null });
 
   const save = () => {
@@ -103,12 +83,45 @@ export default function ManagePackages({ standalone = true }) {
     const price = Number(form.price);
     if (Number.isNaN(price) || price <= 0) { setToast({ severity: 'error', message: 'Price must be a positive number' }); return; }
     if (dialog.editing) {
-      setPackages(prev => prev.map(p => p.id === dialog.editing.id ? { ...p, name: form.name.trim(), price, duration: form.duration.trim(), active: form.active, imageUrl: form.imageUrl.trim() } : p));
+      setPackages(prev => {
+        const next = prev.map(p =>
+          p.id === dialog.editing.id
+            ? {
+                ...p,
+                name: form.name.trim(),
+                price,
+                duration: form.duration.trim(),
+                active: form.active,
+                image: form.imageUrl.trim() || p.image,
+                imageUrl: form.imageUrl.trim(),
+              }
+            : p
+        );
+        savePackages(next);
+        return next;
+      });
       setToast({ severity: 'success', message: 'Package updated' });
     } else {
-      const nextIdNum = Math.max(0, ...packages.map(p => Number(p.id.split('-')[1]) || 0)) + 1;
-      const id = `P-${nextIdNum}`;
-      setPackages(prev => [{ id, name: form.name.trim(), price, duration: form.duration.trim(), active: form.active, imageUrl: form.imageUrl.trim() }, ...prev]);
+      setPackages(prev => {
+        const numericIds = prev
+          .map(p => parseInt(p.id, 10))
+          .filter((n) => Number.isFinite(n));
+        const nextNum = (numericIds.length ? Math.max(...numericIds) : 0) + 1;
+        const id = String(nextNum);
+        const img = form.imageUrl.trim();
+        const created = {
+          id,
+          name: form.name.trim(),
+          price,
+          duration: form.duration.trim(),
+          active: form.active,
+          image: img || undefined,
+          imageUrl: img,
+        };
+        const next = [created, ...prev];
+        savePackages(next);
+        return next;
+      });
       setToast({ severity: 'success', message: 'Package created' });
     }
     closeDialog();
@@ -116,12 +129,24 @@ export default function ManagePackages({ standalone = true }) {
 
   const remove = (id) => {
     if (!window.confirm('Delete this package?')) return;
-    setPackages(prev => prev.filter(p => p.id !== id));
+    setPackages(prev => {
+      const next = prev.filter(p => p.id !== id);
+      savePackages(next);
+      return next;
+    });
     setToast({ severity: 'success', message: 'Package deleted' });
   };
 
   const toggleActive = (id) => {
-    setPackages(prev => prev.map(p => p.id === id ? { ...p, active: !p.active } : p));
+    setPackages(prev => {
+      const next = prev.map(p =>
+        p.id === id
+          ? { ...p, active: !p.active }
+          : p
+      );
+      savePackages(next);
+      return next;
+    });
   };
 
   const handleRequestSort = (property) => () => {
@@ -246,7 +271,20 @@ export default function ManagePackages({ standalone = true }) {
               </Grid>
               <Grid item xs={12}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Box component="img" alt="preview" src={form.imageUrl && form.imageUrl.trim() ? form.imageUrl : 'data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"224\" height=\"120\"><rect width=\"100%\" height=\"100%\" fill=\"%23e0e0e0\"/></svg>'} onError={(e) => { e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"224\" height=\"120\"><rect width=\"100%\" height=\"100%\" fill=\"%23e0e0e0\"/></svg>'; }} sx={{ width: 224, height: 120, objectFit: 'cover', borderRadius: 1, border: '1px solid var(--border)' }} />
+                  <Box
+                    component="img"
+                    alt="preview"
+                    src={
+                      form.imageUrl && form.imageUrl.trim()
+                        ? form.imageUrl
+                        : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="224" height="120"><rect width="100%" height="100%" fill="%23e0e0e0"/></svg>'
+                    }
+                    onError={(e) => {
+                      e.currentTarget.src =
+                        'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="224" height="120"><rect width="100%" height="100%" fill="%23e0e0e0"/></svg>';
+                    }}
+                    sx={{ width: 224, height: 120, objectFit: 'cover', borderRadius: 1, border: '1px solid var(--border)' }}
+                  />
                 </Box>
               </Grid>
               <Grid item xs={12}>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AppBar, Toolbar, IconButton, Drawer, List, ListItem, ListItemText, TextField, Avatar, Menu, MenuItem, Divider, Tooltip, Box, Typography } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -6,6 +6,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import NotificationBell from './NotificationBell';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -47,16 +48,10 @@ const Navbar = () => {
   };
 
   // Check if user is logged in
-  const stored = useMemo(() => {
-    try {
-      return JSON.parse(localStorage.getItem('tm_user')) || null;
-    } catch {
-      return null;
-    }
-  }, []);
+  const { user, isAuthenticated, logout } = useAuth();
 
-  const isLoggedIn = !!stored;
-  const displayName = stored?.userName || 'User';
+  const isLoggedIn = !!isAuthenticated;
+  const displayName = user?.userName || (user?.email ? user.email.split('@')[0] : 'User');
   const initials = displayName
     .split('.')
     .join(' ')
@@ -82,9 +77,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     handleMenuClose();
-    try {
-      localStorage.removeItem('tm_user');
-    } catch {}
+    logout();
     navigate('/login', { replace: true, state: { loggedOut: true } });
   };
 

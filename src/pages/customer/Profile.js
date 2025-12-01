@@ -1,5 +1,6 @@
 // src/pages/user/profile.js
 import React, { useMemo, useState } from 'react';
+
 import {
   Box,
   Typography,
@@ -15,8 +16,10 @@ import {
   Divider,
   Grow,
 } from '@mui/material';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Profile() {
+
   const [form, setForm] = useState({
     firstName: 'Alex',
     lastName: 'Traveler',
@@ -35,6 +38,7 @@ export default function Profile() {
     panNumber: '',
   });
   const [snack, setSnack] = useState(false);
+  const { user, login } = useAuth();
 
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -84,14 +88,17 @@ export default function Profile() {
               textTransform: 'none',
             }}
             onClick={() => {
-              try {
-                const stored = JSON.parse(localStorage.getItem('tm_user')) || {};
-                const userName =
-                  `${form.firstName || ''} ${form.lastName || ''}`.trim() ||
-                  stored.userName ||
-                  'User';
-                localStorage.setItem('tm_user', JSON.stringify({ ...stored, userName }));
-              } catch {}
+              const userName =
+                `${form.firstName || ''} ${form.lastName || ''}`.trim() ||
+                (user && user.userName) ||
+                'User';
+              if (login) {
+                if (user) {
+                  login({ ...user, userName });
+                } else {
+                  login({ userName, role: 'user' });
+                }
+              }
               setSnack(true);
             }}
           >

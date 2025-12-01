@@ -14,14 +14,45 @@ import {
   Stack,
   Fade,
 } from '@mui/material';
-
-const transactions = [
-  { id: 'TXN-1001', packageName: 'Himalayan Escape', amount: 45000, date: '2025-05-02', status: 'Success' },
-  { id: 'TXN-1002', packageName: 'Desert Safari', amount: 28000, date: '2025-05-10', status: 'Failed' },
-  { id: 'TXN-1003', packageName: 'Backwater Bliss', amount: 52000, date: '2025-06-03', status: 'Success' },
-];
+import { useAuth } from '../../context/AuthContext';
+import { getAllPayments } from '../../services/paymentService';
+import { getAllBookings } from '../../services/bookingService';
 
 export default function PaymentHistory() {
+  const { user } = useAuth();
+
+  const { rows, totalSpend } = React.useMemo(() => {
+    const allPayments = getAllPayments();
+    const allBookings = getAllBookings();
+    const email = user?.email;
+
+    let filtered = allPayments;
+    if (email) {
+      const bookingsById = new Map(
+        allBookings.map((b) => [String(b.id), b])
+      );
+      filtered = allPayments.filter((p) => {
+        const booking = bookingsById.get(String(p.bookingId));
+        return booking && booking.userEmail === email;
+      });
+    }
+
+    const mapped = filtered
+      .map((p) => {
+        const booking = allBookings.find((b) => String(b.id) === String(p.bookingId));
+        const packageName = booking?.packageName || 'Travel Package';
+        const amount = Number(p.amount) || 0;
+        const date = p.createdAt ? p.createdAt.slice(0, 10) : '';
+        const status = p.status || 'Success';
+        return { id: p.id, packageName, amount, date, status };
+      })
+      .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+    const total = mapped.reduce((sum, t) => sum + t.amount, 0);
+
+    return { rows: mapped, totalSpend: total };
+  }, [user]);
+
   return (
     <Fade in timeout={300}>
       <Box>
@@ -49,13 +80,13 @@ export default function PaymentHistory() {
             elevation={0}
           >
             <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Total Spend (Mock)
+              Total Spend
             </Typography>
             <Typography variant="h5" sx={{ fontWeight: 700 }}>
-              ₹1,25,000
+              ₹{totalSpend.toLocaleString()}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Simple placeholder. Chart coming soon.
+              Based on successful payments
             </Typography>
           </Paper>
         </Stack>
@@ -80,7 +111,7 @@ export default function PaymentHistory() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {transactions.map((t) => (
+              {rows.map((t) => (
                 <TableRow
                   key={t.id}
                   hover

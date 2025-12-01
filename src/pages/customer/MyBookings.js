@@ -1,5 +1,6 @@
 // src/pages/user/MyBookings.js
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+
 import {
   Box,
   Typography,
@@ -22,27 +23,46 @@ import {
   Fade,
   Slide,
 } from '@mui/material';
-
-const initial = [
-  { id: 'BKG-001', packageName: 'Himalayan Escape', destination: 'Manali', date: '2025-11-05', status: 'Upcoming' },
-  { id: 'BKG-002', packageName: 'Desert Safari', destination: 'Jaisalmer', date: '2025-07-12', status: 'Completed' },
-  { id: 'BKG-003', packageName: 'Backwater Bliss', destination: 'Alleppey', date: '2025-09-03', status: 'Cancelled' },
-];
+import { useAuth } from '../../context/AuthContext';
+import { getAllBookings, updateBooking } from '../../services/bookingService';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="down" ref={ref} {...props} />;
 });
 
 export default function MyBookings() {
-  const [rows, setRows] = useState(initial);
+  const { user } = useAuth();
+  const [rows, setRows] = useState([]);
   const [confirmId, setConfirmId] = useState(null);
   const [snack, setSnack] = useState({ open: false, msg: '', severity: 'success' });
+
+  useEffect(() => {
+    const all = getAllBookings();
+    const email = user?.email;
+    const userBookings = email ? all.filter((b) => b.userEmail === email) : all;
+    const mapped = userBookings.map((b) => ({
+      id: b.id,
+      packageName: b.packageName || 'Travel Package',
+      destination: b.destination || '',
+      date: b.travelDate || (b.createdAt ? b.createdAt.slice(0, 10) : ''),
+      status:
+        b.status === 'Cancelled'
+          ? 'Cancelled'
+          : b.status === 'Confirmed'
+          ? 'Completed'
+          : 'Upcoming',
+    }));
+    setRows(mapped);
+  }, [user]);
 
   const hasData = useMemo(() => rows.length > 0, [rows]);
 
   const handleCancel = (id) => setConfirmId(id);
   const confirmCancel = () => {
     setRows((r) => r.map((x) => (x.id === confirmId ? { ...x, status: 'Cancelled' } : x)));
+    try {
+      updateBooking(confirmId, { status: 'Cancelled' });
+    } catch {}
     setSnack({ open: true, msg: 'Booking Cancelled Successfully', severity: 'success' });
     setConfirmId(null);
   };
