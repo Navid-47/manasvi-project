@@ -60,7 +60,7 @@ export default function DashboardHome() {
   ];
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1100, mx: 'auto' }}>
       <Fade in timeout={400}>
         <Typography
           variant="h5"
@@ -78,18 +78,18 @@ export default function DashboardHome() {
       {/* Stats Section */}
       <Grid container spacing={3} justifyContent="center" sx={{ mb: 4 }}>
         {stats.map((stat, i) => (
-          <Grid item xs={12} md={4} key={stat.title}>
+          <Grid item xs={12} sm={6} md={4} key={stat.title}>
             <Grow in timeout={400 + i * 120}>
               <Card
                 sx={{
-                  borderRadius: '20px',
+                  borderRadius: 'var(--radius)',
                   border: '1px solid var(--border)',
-                  boxShadow: '0 3px 10px rgba(0,0,0,0.1)',
+                  boxShadow: '0 3px 10px rgba(0,0,0,0.08)',
                   textAlign: 'center',
-                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                  transition: 'transform 0.25s ease, box-shadow 0.25s ease',
                   '&:hover': {
-                    transform: 'translateY(-6px)',
-                    boxShadow: '0 10px 24px rgba(0,0,0,0.15)',
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 8px 20px rgba(0,0,0,0.12)',
                   },
                 }}
               >
@@ -113,12 +113,12 @@ export default function DashboardHome() {
           sx={{
             px: 3,
             py: 1.5,
-            borderRadius: '12px',
+            borderRadius: 'var(--radius)',
             mb: 3,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+            boxShadow: '0 4px 10px rgba(0,0,0,0.08)',
             backgroundColor: '#1976d2',
             color: '#fff',
           }}
@@ -150,20 +150,20 @@ export default function DashboardHome() {
               <Card
                 sx={{
                   position: 'relative',
-                  borderRadius: '20px',
+                  borderRadius: 'var(--radius)',
                   overflow: 'hidden',
-                  height: 250,
-                  boxShadow: '0 6px 16px rgba(0,0,0,0.12)',
-                  transition: 'transform 0.4s ease, box-shadow 0.4s ease',
+                  height: 240,
+                  boxShadow: '0 6px 14px rgba(0,0,0,0.1)',
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
                   '&:hover': {
-                    transform: 'translateY(-4px) scale(1.01)',
-                    boxShadow: '0 12px 28px rgba(0,0,0,0.18)',
+                    transform: 'translateY(-3px)',
+                    boxShadow: '0 10px 24px rgba(0,0,0,0.14)',
                   },
                 }}
               >
                 <CardMedia
                   component="img"
-                  height="250"
+                  height="240"
                   image={card.image}
                   alt={card.title}
                   sx={{ filter: 'brightness(0.85)' }}

@@ -19,24 +19,22 @@ import {
   Chip,
   Stack,
 } from '@mui/material';
-
-function useLocalStorage(key, initialValue) {
-  const [value, setValue] = React.useState(() => {
-    try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : initialValue; } catch { return initialValue; }
-  });
-  React.useEffect(() => { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} }, [key, value]);
-  return [value, setValue];
-}
+import { getAllBookings } from '../../services/bookingService';
 
 export default function PaymentReports({ standalone = true }) {
-  const [bookings] = useLocalStorage('admin_bookings', []);
+  const bookings = getAllBookings();
   const [from, setFrom] = React.useState('');
   const [to, setTo] = React.useState('');
   const [toast, setToast] = React.useState(null);
 
   const payments = bookings
     .filter(b => b.status === 'Confirmed')
-    .map(b => ({ id: b.id, customer: b.customer, date: b.createdAt, amount: b.amount }))
+    .map(b => ({
+      id: b.id,
+      customer: b.customer || b.userEmail || 'Customer',
+      date: b.createdAt,
+      amount: b.amount,
+    }))
     .filter(p => {
       const d = new Date(p.date).setHours(0,0,0,0);
       const afterFrom = from ? d >= new Date(from).setHours(0,0,0,0) : true;

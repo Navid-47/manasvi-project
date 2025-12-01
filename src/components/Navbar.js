@@ -142,10 +142,13 @@ const Navbar = () => {
             >
               <SearchIcon />
             </IconButton>
-            <NotificationBell
-              notifications={sampleNotifications}
-              onReadAll={() => {}}
-            />
+            {isLoggedIn && (
+              <NotificationBell
+                notifications={sampleNotifications}
+                onReadAll={() => {}}
+              />
+            )}
+
             {/* Show Profile Menu if logged in, otherwise show Book Now */}
             {isLoggedIn ? (
               <Box className="flex items-center gap-2">

@@ -15,7 +15,7 @@ const Tours = () => {
   const navigate = useNavigate();
 
   const { packages, loading, error } = useFetchPackages();
-  const allTours = packages || [];
+  const allTours = (packages || []).filter((pkg) => pkg.active !== false);
 
   const categories = ['Adventure', 'Beach', 'Cultural', 'City'];
   const sortOptions = [

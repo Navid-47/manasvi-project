@@ -113,7 +113,7 @@ export default function AdminDashboard({ standalone = true }) {
                 sx={{
                   cursor: 'pointer',
                   p: 2,
-                  borderRadius: '20px',
+                  borderRadius: 'var(--radius)',
                   border: '1px solid var(--border)',
                   boxShadow: '0 3px 10px rgba(0,0,0,0.08)',
                   display: 'flex',
@@ -121,12 +121,12 @@ export default function AdminDashboard({ standalone = true }) {
                   justifyContent: 'space-between',
                   height: '100%',
                   minHeight: { xs: 140, sm: 150, md: 160 },
-                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                  '&:hover': { transform: 'translateY(-6px)', boxShadow: '0 12px 24px rgba(0,0,0,0.15)' },
+                  transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+                  '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 10px 20px rgba(0,0,0,0.14)' },
                 }}
               >
               <Typography color="text.secondary">Total Revenue</Typography>
-              <Typography variant="h5" sx={{ fontWeight: 700 }}>₹{totalRevenue.toLocaleString()}</Typography>
+              <Typography sx={{ fontWeight: 800, color: 'var(--brand)', fontSize: { xs: '1.35rem', md: '1.6rem' } }}>₹{totalRevenue.toLocaleString()}</Typography>
               <MiniAreaChart series={revenueSeries} />
               </Paper>
             </Grow>
@@ -138,7 +138,7 @@ export default function AdminDashboard({ standalone = true }) {
                 sx={{
                   cursor: 'pointer',
                   p: 2,
-                  borderRadius: '20px',
+                  borderRadius: 'var(--radius)',
                   border: '1px solid var(--border)',
                   boxShadow: '0 3px 10px rgba(0,0,0,0.08)',
                   display: 'flex',
@@ -146,12 +146,12 @@ export default function AdminDashboard({ standalone = true }) {
                   justifyContent: 'space-between',
                   height: '100%',
                   minHeight: { xs: 140, sm: 150, md: 160 },
-                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                  '&:hover': { transform: 'translateY(-6px)', boxShadow: '0 12px 24px rgba(0,0,0,0.15)' },
+                  transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+                  '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 10px 20px rgba(0,0,0,0.14)' },
                 }}
               >
               <Typography color="text.secondary">Bookings</Typography>
-              <Typography variant="h5" sx={{ fontWeight: 700 }}>{bookings.length}</Typography>
+              <Typography sx={{ fontWeight: 800, color: 'var(--brand)', fontSize: { xs: '1.35rem', md: '1.6rem' } }}>{bookings.length}</Typography>
               <Typography variant="body2" color="text.secondary">{pendingCount} pending</Typography>
               </Paper>
             </Grow>
@@ -163,7 +163,7 @@ export default function AdminDashboard({ standalone = true }) {
                 sx={{
                   cursor: 'pointer',
                   p: 2,
-                  borderRadius: '20px',
+                  borderRadius: 'var(--radius)',
                   border: '1px solid var(--border)',
                   boxShadow: '0 3px 10px rgba(0,0,0,0.08)',
                   display: 'flex',
@@ -171,12 +171,12 @@ export default function AdminDashboard({ standalone = true }) {
                   justifyContent: 'space-between',
                   height: '100%',
                   minHeight: { xs: 140, sm: 150, md: 160 },
-                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                  '&:hover': { transform: 'translateY(-6px)', boxShadow: '0 12px 24px rgba(0,0,0,0.15)' },
+                  transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+                  '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 10px 20px rgba(0,0,0,0.14)' },
                 }}
               >
               <Typography color="text.secondary">Active Packages</Typography>
-              <Typography variant="h5" sx={{ fontWeight: 700 }}>{activePackages}</Typography>
+              <Typography sx={{ fontWeight: 800, color: 'var(--brand)', fontSize: { xs: '1.35rem', md: '1.6rem' } }}>{activePackages}</Typography>
               <Typography variant="body2" color="text.secondary">{packages.length} total</Typography>
               </Paper>
             </Grow>
@@ -188,7 +188,7 @@ export default function AdminDashboard({ standalone = true }) {
                 sx={{
                   cursor: 'pointer',
                   p: 2,
-                  borderRadius: '20px',
+                  borderRadius: 'var(--radius)',
                   border: '1px solid var(--border)',
                   boxShadow: '0 3px 10px rgba(0,0,0,0.08)',
                   display: 'flex',
@@ -196,12 +196,12 @@ export default function AdminDashboard({ standalone = true }) {
                   justifyContent: 'space-between',
                   height: '100%',
                   minHeight: { xs: 140, sm: 150, md: 160 },
-                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                  '&:hover': { transform: 'translateY(-6px)', boxShadow: '0 12px 24px rgba(0,0,0,0.15)' },
+                  transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+                  '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 10px 20px rgba(0,0,0,0.14)' },
                 }}
               >
               <Typography color="text.secondary">Avg. Order Value</Typography>
-              <Typography variant="h5" sx={{ fontWeight: 700 }}>₹{(bookings.length ? Math.round(totalRevenue / Math.max(1, bookings.filter(b=>b.status==='Confirmed').length)) : 0).toLocaleString()}</Typography>
+              <Typography sx={{ fontWeight: 800, color: 'var(--brand)', fontSize: { xs: '1.35rem', md: '1.6rem' } }}>₹{(bookings.length ? Math.round(totalRevenue / Math.max(1, bookings.filter(b=>b.status==='Confirmed').length)) : 0).toLocaleString()}</Typography>
               <Typography variant="body2" color="text.secondary">confirmed only</Typography>
               </Paper>
             </Grow>
@@ -209,10 +209,10 @@ export default function AdminDashboard({ standalone = true }) {
 
           <Grid item xs={12}>
             <Fade in timeout={350}>
-              <Paper sx={{ p: 0, mb: 2, borderRadius: '20px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+              <Paper sx={{ p: 0, mb: 2, borderRadius: 'var(--radius)', overflow: 'hidden', border: '1px solid var(--border)' }}>
                 <Box
                   sx={{
-                    height: 160,
+                    height: 120,
                     background: 'linear-gradient(135deg, #1976d2 0%, #51F2D9 100%)',
                     position: 'relative',
                   }}
@@ -221,7 +221,7 @@ export default function AdminDashboard({ standalone = true }) {
                     component="img"
                     alt="decor"
                     src={'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="160"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="%23ffffff" stop-opacity="0.2"/><stop offset="100%" stop-color="%23ffffff" stop-opacity="0"/></linearGradient></defs><rect width="800" height="160" fill="url(%23g)"/></svg>'}
-                    sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.6 }}
+                    sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.45 }}
                   />
                 </Box>
               </Paper>
@@ -230,7 +230,7 @@ export default function AdminDashboard({ standalone = true }) {
 
           <Grid item xs={12} md={7}>
             <Fade in timeout={400}>
-              <Paper sx={{ p: 2, height: '100%', borderRadius: '20px', border: '1px solid var(--border)' }}>
+              <Paper sx={{ p: 2, height: '100%', borderRadius: 'var(--radius)', border: '1px solid var(--border)', boxShadow: '0 3px 10px rgba(0,0,0,0.06)' }}>
               <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
                 <Typography variant="h6">Revenue (Last 6 months)</Typography>
                 <Chip label="INR" size="small" />
@@ -268,7 +268,7 @@ export default function AdminDashboard({ standalone = true }) {
 
           <Grid item xs={12} md={5}>
             <Fade in timeout={500}>
-              <Paper sx={{ p: 2, height: '100%', borderRadius: '20px', border: '1px solid var(--border)' }}>
+              <Paper sx={{ p: 2, height: '100%', borderRadius: 'var(--radius)', border: '1px solid var(--border)', boxShadow: '0 3px 10px rgba(0,0,0,0.06)' }}>
               <Typography variant="h6" sx={{ mb: 1 }}>Recent Bookings</Typography>
               <Divider />
               <List dense>

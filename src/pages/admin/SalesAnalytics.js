@@ -11,13 +11,7 @@ import {
   Divider,
   Fade,
 } from '@mui/material';
-
-function useLocalStorage(key, initialValue) {
-  const [value] = React.useState(() => {
-    try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : initialValue; } catch { return initialValue; }
-  });
-  return [value];
-}
+import { getAllBookings } from '../../services/bookingService';
 
 function SimpleBarChart({ data, maxHeight = 160 }) {
   const max = Math.max(...data.map(d => d.value), 1);
@@ -50,7 +44,7 @@ function SimpleLineChart({ points, height = 160 }) {
 }
 
 export default function SalesAnalytics({ standalone = true }) {
-  const [bookings] = useLocalStorage('admin_bookings', []);
+  const bookings = getAllBookings();
   const [range, setRange] = React.useState('30');
 
   const now = new Date();
