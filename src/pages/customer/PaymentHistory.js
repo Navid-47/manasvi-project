@@ -71,6 +71,10 @@ export default function PaymentHistory() {
               p: 2,
               border: '1px solid var(--border)',
               borderRadius: 'var(--radius)',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              minHeight: { xs: 120, sm: 130 },
               transition: 'transform 0.2s ease, box-shadow 0.2s ease',
               '&:hover': {
                 transform: 'translateY(-4px)',

@@ -105,37 +105,101 @@ export default function AdminDashboard({ standalone = true }) {
           </Box>
         </Fade>
 
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={3}>
+        <Grid container spacing={2} alignItems="stretch">
+          <Grid item xs={12} sm={6} md={3}>
             <Grow in timeout={400}>
-              <Paper onClick={() => navigate('/admin-dashboard/payments')} sx={{ cursor: 'pointer', p: 2, borderRadius: '20px', border: '1px solid var(--border)', boxShadow: '0 3px 10px rgba(0,0,0,0.08)', transition: 'transform 0.3s ease, box-shadow 0.3s ease', '&:hover': { transform: 'translateY(-6px)', boxShadow: '0 12px 24px rgba(0,0,0,0.15)' } }}>
+              <Paper
+                onClick={() => navigate('/admin-dashboard/payments')}
+                sx={{
+                  cursor: 'pointer',
+                  p: 2,
+                  borderRadius: '20px',
+                  border: '1px solid var(--border)',
+                  boxShadow: '0 3px 10px rgba(0,0,0,0.08)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  height: '100%',
+                  minHeight: { xs: 140, sm: 150, md: 160 },
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                  '&:hover': { transform: 'translateY(-6px)', boxShadow: '0 12px 24px rgba(0,0,0,0.15)' },
+                }}
+              >
               <Typography color="text.secondary">Total Revenue</Typography>
               <Typography variant="h5" sx={{ fontWeight: 700 }}>₹{totalRevenue.toLocaleString()}</Typography>
               <MiniAreaChart series={revenueSeries} />
               </Paper>
             </Grow>
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} sm={6} md={3}>
             <Grow in timeout={520}>
-              <Paper onClick={() => navigate('/admin-dashboard/bookings')} sx={{ cursor: 'pointer', p: 2, borderRadius: '20px', border: '1px solid var(--border)', boxShadow: '0 3px 10px rgba(0,0,0,0.08)', transition: 'transform 0.3s ease, box-shadow 0.3s ease', '&:hover': { transform: 'translateY(-6px)', boxShadow: '0 12px 24px rgba(0,0,0,0.15)' } }}>
+              <Paper
+                onClick={() => navigate('/admin-dashboard/bookings')}
+                sx={{
+                  cursor: 'pointer',
+                  p: 2,
+                  borderRadius: '20px',
+                  border: '1px solid var(--border)',
+                  boxShadow: '0 3px 10px rgba(0,0,0,0.08)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  height: '100%',
+                  minHeight: { xs: 140, sm: 150, md: 160 },
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                  '&:hover': { transform: 'translateY(-6px)', boxShadow: '0 12px 24px rgba(0,0,0,0.15)' },
+                }}
+              >
               <Typography color="text.secondary">Bookings</Typography>
               <Typography variant="h5" sx={{ fontWeight: 700 }}>{bookings.length}</Typography>
               <Typography variant="body2" color="text.secondary">{pendingCount} pending</Typography>
               </Paper>
             </Grow>
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} sm={6} md={3}>
             <Grow in timeout={640}>
-              <Paper onClick={() => navigate('/admin-dashboard/packages')} sx={{ cursor: 'pointer', p: 2, borderRadius: '20px', border: '1px solid var(--border)', boxShadow: '0 3px 10px rgba(0,0,0,0.08)', transition: 'transform 0.3s ease, box-shadow 0.3s ease', '&:hover': { transform: 'translateY(-6px)', boxShadow: '0 12px 24px rgba(0,0,0,0.15)' } }}>
+              <Paper
+                onClick={() => navigate('/admin-dashboard/packages')}
+                sx={{
+                  cursor: 'pointer',
+                  p: 2,
+                  borderRadius: '20px',
+                  border: '1px solid var(--border)',
+                  boxShadow: '0 3px 10px rgba(0,0,0,0.08)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  height: '100%',
+                  minHeight: { xs: 140, sm: 150, md: 160 },
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                  '&:hover': { transform: 'translateY(-6px)', boxShadow: '0 12px 24px rgba(0,0,0,0.15)' },
+                }}
+              >
               <Typography color="text.secondary">Active Packages</Typography>
               <Typography variant="h5" sx={{ fontWeight: 700 }}>{activePackages}</Typography>
               <Typography variant="body2" color="text.secondary">{packages.length} total</Typography>
               </Paper>
             </Grow>
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} sm={6} md={3}>
             <Grow in timeout={760}>
-              <Paper onClick={() => navigate('/admin-dashboard/analytics')} sx={{ cursor: 'pointer', p: 2, borderRadius: '20px', border: '1px solid var(--border)', boxShadow: '0 3px 10px rgba(0,0,0,0.08)', transition: 'transform 0.3s ease, box-shadow 0.3s ease', '&:hover': { transform: 'translateY(-6px)', boxShadow: '0 12px 24px rgba(0,0,0,0.15)' } }}>
+              <Paper
+                onClick={() => navigate('/admin-dashboard/analytics')}
+                sx={{
+                  cursor: 'pointer',
+                  p: 2,
+                  borderRadius: '20px',
+                  border: '1px solid var(--border)',
+                  boxShadow: '0 3px 10px rgba(0,0,0,0.08)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  height: '100%',
+                  minHeight: { xs: 140, sm: 150, md: 160 },
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                  '&:hover': { transform: 'translateY(-6px)', boxShadow: '0 12px 24px rgba(0,0,0,0.15)' },
+                }}
+              >
               <Typography color="text.secondary">Avg. Order Value</Typography>
               <Typography variant="h5" sx={{ fontWeight: 700 }}>₹{(bookings.length ? Math.round(totalRevenue / Math.max(1, bookings.filter(b=>b.status==='Confirmed').length)) : 0).toLocaleString()}</Typography>
               <Typography variant="body2" color="text.secondary">confirmed only</Typography>
