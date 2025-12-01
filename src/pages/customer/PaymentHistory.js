@@ -55,7 +55,7 @@ export default function PaymentHistory() {
 
   return (
     <Fade in timeout={300}>
-      <Box>
+      <Box sx={{ maxWidth: 1100, mx: 'auto', p: { xs: 1.5, md: 2 } }}>
         <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
           Payment History
         </Typography>

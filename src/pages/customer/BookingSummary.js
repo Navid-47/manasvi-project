@@ -70,7 +70,7 @@ const BookingSummary = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1100, mx: 'auto' }}>
       <Grid container spacing={3}>
         <Grid item xs={12} md={7}>
           <Paper

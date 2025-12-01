@@ -97,7 +97,7 @@ export default function AdminDashboard({ standalone = true }) {
         </>
       )}
 
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1200, mx: 'auto' }}>
         <Fade in timeout={300}>
           <Box>
             <Typography variant="h5" sx={{ fontWeight: 700, mb: 1, textAlign: 'center' }}>Welcome, {userName}</Typography>

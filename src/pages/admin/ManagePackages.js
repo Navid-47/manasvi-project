@@ -172,7 +172,7 @@ export default function ManagePackages({ standalone = true }) {
         </>
       )}
 
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1200, mx: 'auto' }}>
         <Fade in timeout={300}>
           <Paper sx={{ p: 2, mb: 2, borderRadius: '20px', border: '1px solid var(--border)', boxShadow: '0 3px 10px rgba(0,0,0,0.06)' }}>
           <Grid container spacing={2}>

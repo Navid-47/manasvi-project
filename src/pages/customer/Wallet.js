@@ -40,7 +40,7 @@ export default function Wallet() {
   );
 
   return (
-    <Box sx={{ p: 3, backgroundColor: 'var(--surface)', borderRadius: '16px' }}>
+    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1100, mx: 'auto', backgroundColor: 'var(--surface)', borderRadius: '16px' }}>
       <Fade in timeout={300}>
         <Typography
           variant="h5"
