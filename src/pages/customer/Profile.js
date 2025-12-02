@@ -17,6 +17,7 @@ import {
   Grow,
 } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
+import { getUserByEmail, updateUser } from '../../services/userService';
 
 export default function Profile() {
 
@@ -39,6 +40,36 @@ export default function Profile() {
   });
   const [snack, setSnack] = useState(false);
   const { user, login } = useAuth();
+
+  React.useEffect(() => {
+    if (!user?.email) return;
+    try {
+      const u = getUserByEmail(user.email);
+      if (!u) return;
+      const fallbackName = String(u.name || '')
+        .trim();
+      const [firstDefault, ...rest] = fallbackName.split(' ').filter(Boolean);
+      const lastDefault = rest.join(' ');
+      setForm((prev) => ({
+        ...prev,
+        firstName: u.firstName || firstDefault || prev.firstName,
+        lastName: u.lastName || lastDefault || prev.lastName,
+        gender: u.gender || prev.gender,
+        dob: u.dob || prev.dob,
+        nationality: u.nationality || prev.nationality,
+        maritalStatus: u.maritalStatus || prev.maritalStatus,
+        anniversary: u.anniversary || prev.anniversary,
+        city: u.city || prev.city,
+        state: u.state || prev.state,
+        phone: u.phone || prev.phone,
+        email: u.email || prev.email,
+        passportNumber: u.passportNumber || prev.passportNumber,
+        passportExpiry: u.passportExpiry || prev.passportExpiry,
+        issuingCountry: u.issuingCountry || prev.issuingCountry,
+        panNumber: u.panNumber || prev.panNumber,
+      }));
+    } catch {}
+  }, [user]);
 
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -88,10 +119,29 @@ export default function Profile() {
               textTransform: 'none',
             }}
             onClick={() => {
-              const userName =
-                `${form.firstName || ''} ${form.lastName || ''}`.trim() ||
-                (user && user.userName) ||
-                'User';
+              const computedName = `${form.firstName || ''} ${form.lastName || ''}`.trim();
+              const userName = computedName || (user && user.userName) || 'User';
+              try {
+                if (user?.id) {
+                  updateUser(user.id, {
+                    name: userName,
+                    firstName: form.firstName,
+                    lastName: form.lastName,
+                    gender: form.gender,
+                    dob: form.dob,
+                    nationality: form.nationality,
+                    maritalStatus: form.maritalStatus,
+                    anniversary: form.anniversary,
+                    city: form.city,
+                    state: form.state,
+                    phone: form.phone,
+                    passportNumber: form.passportNumber,
+                    passportExpiry: form.passportExpiry,
+                    issuingCountry: form.issuingCountry,
+                    panNumber: form.panNumber,
+                  });
+                }
+              } catch {}
               if (login) {
                 if (user) {
                   login({ ...user, userName });
@@ -249,6 +299,7 @@ export default function Profile() {
                 name="email"
                 value={form.email}
                 onChange={onChange}
+                disabled
               />
             </Grid>
           </Grid>

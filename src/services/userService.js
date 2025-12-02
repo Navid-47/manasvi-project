@@ -84,3 +84,19 @@ export function createUser(payload) {
   writeToStorage(next);
   return user;
 }
+
+export function updateUser(id, patch) {
+  const users = getAllUsers();
+  const next = users.map((u) => {
+    if (String(u.id) !== String(id)) return u;
+    const updated = { ...u, ...patch };
+    // Preserve immutable/auth-critical fields
+    updated.id = u.id;
+    updated.email = u.email;
+    updated.role = u.role;
+    updated.password = u.password;
+    return updated;
+  });
+  writeToStorage(next);
+  return next.find((u) => String(u.id) === String(id)) || null;
+}
