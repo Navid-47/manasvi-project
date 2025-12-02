@@ -116,6 +116,21 @@ const BookingSummary = () => {
               </Box>
             )}
 
+            {Array.isArray(booking.travelersDetails) && booking.travelersDetails.length > 0 && (
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  Traveler details
+                </Typography>
+                <Box sx={{ mt: 1 }}>
+                  {booking.travelersDetails.map((t, index) => (
+                    <Typography key={index} variant="body2" color="text.secondary">
+                      {`#${index + 1}: ${t.name || 'N/A'}${t.age ? ` (Age: ${t.age})` : ''}${t.contact ? ` • ${t.contact}` : ''}${t.passportNumber ? ` • Passport: ${t.passportNumber}` : ''}`}
+                    </Typography>
+                  ))}
+                </Box>
+              </Box>
+            )}
+
             <Button
               variant="contained"
               sx={{

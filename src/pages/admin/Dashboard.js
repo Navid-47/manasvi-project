@@ -82,6 +82,31 @@ export default function AdminDashboard({ standalone = true }) {
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 5);
 
+  const confirmedBookings = bookings.filter((b) => b.status === 'Confirmed');
+  const revenueByPackageId = confirmedBookings.reduce((acc, b) => {
+    const pkgId = b.packageId || b.package_id || b.package || 'unknown';
+    const amount = Number(b.amount) || 0;
+    if (!acc[pkgId]) {
+      acc[pkgId] = { id: pkgId, revenue: 0, count: 0 };
+    }
+    acc[pkgId].revenue += amount;
+    acc[pkgId].count += 1;
+    return acc;
+  }, {});
+  const packagesById = new Map((packages || []).map((p) => [String(p.id), p]));
+  const topPackages = Object.values(revenueByPackageId)
+    .map((entry) => {
+      const pkgMeta = packagesById.get(String(entry.id));
+      return {
+        id: entry.id,
+        name: pkgMeta?.name || pkgMeta?.title || entry.id || 'Travel Package',
+        revenue: entry.revenue,
+        count: entry.count,
+      };
+    })
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 5);
+
   return (
     <Box sx={{ minHeight: 'calc(100vh - 120px)', backgroundColor: 'var(--bg)' }}>
       {standalone && (
@@ -281,6 +306,24 @@ export default function AdminDashboard({ standalone = true }) {
                   </ListItem>
                 ))}
               </List>
+              {topPackages.length > 0 && (
+                <>
+                  <Divider sx={{ my: 1.5 }} />
+                  <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                    Top Packages
+                  </Typography>
+                  <List dense>
+                    {topPackages.map((p) => (
+                      <ListItem key={p.id}>
+                        <ListItemText
+                          primary={p.name}
+                          secondary={`Bookings: ${p.count} • Revenue: ₹${p.revenue.toLocaleString()}`}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                </>
+              )}
               </Paper>
             </Fade>
           </Grid>

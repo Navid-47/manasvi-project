@@ -23,6 +23,7 @@ import {
   DialogActions,
   Snackbar,
   Alert,
+  MenuItem,
 } from '@mui/material';
 import { getAllPackages, savePackages } from '../../services/packageService';
 
@@ -31,7 +32,18 @@ export default function ManagePackages({ standalone = true }) {
   const [query, setQuery] = React.useState('');
   const [debouncedQuery, setDebouncedQuery] = React.useState('');
   const [dialog, setDialog] = React.useState({ open: false, editing: null });
-  const [form, setForm] = React.useState({ name: '', price: '', duration: '', active: true, imageUrl: '' });
+  const [form, setForm] = React.useState({
+    name: '',
+    destination: '',
+    price: '',
+    duration: '',
+    itinerary: '',
+    inclusions: '',
+    exclusions: '',
+    tripType: 'Domestic',
+    active: true,
+    imageUrl: '',
+  });
   const [toast, setToast] = React.useState(null);
   const [orderBy, setOrderBy] = React.useState('id');
   const [order, setOrder] = React.useState('desc');
@@ -44,7 +56,12 @@ export default function ManagePackages({ standalone = true }) {
     return () => clearTimeout(t);
   }, [query]);
 
-  const filtered = packages.filter((p) => (p.name || '').toLowerCase().includes(debouncedQuery.toLowerCase()));
+  const filtered = packages.filter((p) => {
+    const q = debouncedQuery.toLowerCase();
+    const name = (p.name || '').toLowerCase();
+    const destination = (p.destination || '').toLowerCase();
+    return name.includes(q) || destination.includes(q);
+  });
 
   const sortComparator = (a, b) => {
     const av = a[orderBy];
@@ -62,15 +79,37 @@ export default function ManagePackages({ standalone = true }) {
   const paged = sorted.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   const openCreate = () => {
-    setForm({ name: '', price: '', duration: '', active: true, imageUrl: '' });
+    setForm({
+      name: '',
+      destination: '',
+      price: '',
+      duration: '',
+      itinerary: '',
+      inclusions: '',
+      exclusions: '',
+      tripType: 'Domestic',
+      active: true,
+      imageUrl: '',
+    });
     setDialog({ open: true, editing: null });
   };
 
   const openEdit = (pkg) => {
     setForm({
       name: pkg.name || '',
+      destination: pkg.destination || '',
       price: String(pkg.price ?? ''),
       duration: pkg.duration || '',
+      itinerary: Array.isArray(pkg.itinerary)
+        ? pkg.itinerary.join('\n')
+        : pkg.itinerary || '',
+      inclusions: Array.isArray(pkg.inclusions)
+        ? pkg.inclusions.join('\n')
+        : pkg.inclusions || '',
+      exclusions: Array.isArray(pkg.exclusions)
+        ? pkg.exclusions.join('\n')
+        : pkg.exclusions || '',
+      tripType: pkg.tripType || 'Domestic',
       active: pkg.active ?? true,
       imageUrl: pkg.imageUrl || pkg.image || (Array.isArray(pkg.images) && pkg.images[0]) || '',
     });
@@ -82,6 +121,11 @@ export default function ManagePackages({ standalone = true }) {
     if (!form.name.trim() || !form.price) { setToast({ severity: 'error', message: 'Name and price are required' }); return; }
     const price = Number(form.price);
     if (Number.isNaN(price) || price <= 0) { setToast({ severity: 'error', message: 'Price must be a positive number' }); return; }
+    const toList = (value) =>
+      String(value || '')
+        .split('\n')
+        .map((v) => v.trim())
+        .filter(Boolean);
     if (dialog.editing) {
       setPackages(prev => {
         const next = prev.map(p =>
@@ -89,8 +133,13 @@ export default function ManagePackages({ standalone = true }) {
             ? {
                 ...p,
                 name: form.name.trim(),
+                destination: form.destination.trim(),
                 price,
                 duration: form.duration.trim(),
+                itinerary: toList(form.itinerary),
+                inclusions: toList(form.inclusions),
+                exclusions: toList(form.exclusions),
+                tripType: form.tripType || 'Domestic',
                 active: form.active,
                 image: form.imageUrl.trim() || p.image,
                 imageUrl: form.imageUrl.trim(),
@@ -112,8 +161,13 @@ export default function ManagePackages({ standalone = true }) {
         const created = {
           id,
           name: form.name.trim(),
+          destination: form.destination.trim(),
           price,
           duration: form.duration.trim(),
+          itinerary: toList(form.itinerary),
+          inclusions: toList(form.inclusions),
+          exclusions: toList(form.exclusions),
+          tripType: form.tripType || 'Domestic',
           active: form.active,
           image: img || undefined,
           imageUrl: img,
@@ -260,11 +314,56 @@ export default function ManagePackages({ standalone = true }) {
               <Grid item xs={12}>
                 <TextField fullWidth label="Name" value={form.name} onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))} />
               </Grid>
+              <Grid item xs={12}>
+                <TextField fullWidth label="Destination" value={form.destination} onChange={(e) => setForm(f => ({ ...f, destination: e.target.value }))} />
+              </Grid>
               <Grid item xs={12} md={6}>
                 <TextField fullWidth label="Price (₹)" value={form.price} onChange={(e) => setForm(f => ({ ...f, price: e.target.value }))} />
               </Grid>
               <Grid item xs={12} md={6}>
                 <TextField fullWidth label="Duration (e.g., 3N/4D)" value={form.duration} onChange={(e) => setForm(f => ({ ...f, duration: e.target.value }))} />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  select
+                  label="Trip type"
+                  value={form.tripType}
+                  onChange={(e) => setForm((f) => ({ ...f, tripType: e.target.value }))}
+                >
+                  <MenuItem value="Domestic">Domestic</MenuItem>
+                  <MenuItem value="International">International</MenuItem>
+                </TextField>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Itinerary (one item per line)"
+                  value={form.itinerary}
+                  onChange={(e) => setForm((f) => ({ ...f, itinerary: e.target.value }))}
+                  multiline
+                  minRows={2}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Inclusions (one per line)"
+                  value={form.inclusions}
+                  onChange={(e) => setForm((f) => ({ ...f, inclusions: e.target.value }))}
+                  multiline
+                  minRows={2}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Exclusions (one per line)"
+                  value={form.exclusions}
+                  onChange={(e) => setForm((f) => ({ ...f, exclusions: e.target.value }))}
+                  multiline
+                  minRows={2}
+                />
               </Grid>
               <Grid item xs={12}>
                 <TextField fullWidth label="Image URL" value={form.imageUrl} onChange={(e) => setForm(f => ({ ...f, imageUrl: e.target.value }))} />

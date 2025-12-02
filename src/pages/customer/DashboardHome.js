@@ -1,5 +1,6 @@
 // src/pages/user/DashboardHome.js
 import React from 'react';
+
 import {
   Box,
   Grid,
@@ -12,52 +13,59 @@ import {
   Fade,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-
-const mockStats = {
-  totalBookings: 5,
-  upcomingTrips: 2,
-  totalSpent: 125000,
-};
+import { useAuth } from '../../context/AuthContext';
+import { getAllBookings } from '../../services/bookingService';
 
 export default function DashboardHome() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const allBookings = getAllBookings();
+  const email = user?.email;
+  const userBookings = email ? allBookings.filter((b) => b.userEmail === email) : allBookings;
+
+  const totalBookings = userBookings.length;
+  const confirmed = userBookings.filter((b) => b.status === 'Confirmed');
+  const totalSpent = confirmed.reduce((sum, b) => sum + (b.amount || 0), 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dayMs = 24 * 60 * 60 * 1000;
+
+  const upcoming = confirmed
+    .map((b) => {
+      const rawDate = b.travelDate || b.createdAt;
+      if (!rawDate) return null;
+      const tripDate = new Date(rawDate);
+      if (Number.isNaN(tripDate.getTime())) return null;
+      tripDate.setHours(0, 0, 0, 0);
+      const daysUntil = Math.round((tripDate.getTime() - today.getTime()) / dayMs);
+      return {
+        id: b.id,
+        packageName: b.packageName || 'Travel Package',
+        destination: b.destination || '',
+        date: tripDate.toLocaleDateString(),
+        daysUntil,
+      };
+    })
+    .filter((x) => x && x.daysUntil >= 0)
+    .sort((a, b) => a.daysUntil - b.daysUntil);
 
   const stats = [
-    { title: 'Total Bookings', value: mockStats.totalBookings },
-    { title: 'Upcoming Trips', value: mockStats.upcomingTrips },
-    { title: 'Total Spent', value: `₹${mockStats.totalSpent.toLocaleString()}` },
+    { title: 'Total Bookings', value: totalBookings },
+    { title: 'Upcoming Trips', value: upcoming.length },
+    { title: 'Total Spent', value: `₹${totalSpent.toLocaleString()}` },
   ];
 
-  const upcomingCards = [
-    {
-      title: 'Beach Bliss',
-      destination: 'Goa, India',
-      date: '20 Dec 2025',
-      image:
-        'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?q=80&w=1200',
-    },
-    {
-      title: 'Beach Bliss',
-      destination: 'Goa, India',
-      date: '20 Dec 2025',
-      image:
-        'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?q=80&w=1200',
-    },
-    {
-      title: 'Desert Adventure',
-      destination: 'Jaisalmer, India',
-      date: '10 Jan 2026',
-      image:
-        'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200',
-    },
-    {
-      title: 'Desert Adventure',
-      destination: 'Jaisalmer, India',
-      date: '10 Jan 2026',
-      image:
-        'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200',
-    },
-  ];
+  const defaultImage =
+    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200';
+  const upcomingCards = upcoming.slice(0, 4).map((b) => ({
+    id: b.id,
+    title: b.packageName,
+    destination: b.destination,
+    date: b.date,
+    daysUntil: b.daysUntil,
+    image: defaultImage,
+  }));
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1100, mx: 'auto' }}>
@@ -142,7 +150,7 @@ export default function DashboardHome() {
         </Box>
       </Grow>
 
-      {/* Upcoming Trips Grid (Static Cards) */}
+      {/* Upcoming Trips Grid (user bookings) */}
       <Grid container spacing={3} sx={{ mt: 1 }}>
         {upcomingCards.map((card, i) => (
           <Grid item xs={12} sm={6} md={3} key={`${card.title}-${i}`}>
@@ -186,6 +194,13 @@ export default function DashboardHome() {
                   <Typography variant="body2" sx={{ mt: 0.5 }}>
                     Travel Date: {card.date}
                   </Typography>
+                  {typeof card.daysUntil === 'number' && card.daysUntil >= 0 && (
+                    <Typography variant="body2" sx={{ mt: 0.5 }}>
+                      {card.daysUntil === 0
+                        ? 'Trip is today'
+                        : `Trip in ${card.daysUntil} day(s)`}
+                    </Typography>
+                  )}
                 </Box>
               </Card>
             </Grow>

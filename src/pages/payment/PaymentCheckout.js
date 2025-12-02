@@ -27,6 +27,8 @@ const PaymentCheckout = () => {
           bookingId: booking.id,
           amount: booking.amount,
           method: 'Card',
+          userEmail: booking.userEmail || null,
+          packageName: booking.packageName || 'Travel Package',
         });
         updateBooking(booking.id, { status: 'Confirmed' });
         navigate('/payment/success', {

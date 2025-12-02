@@ -22,7 +22,9 @@ import {
   Stack,
   Fade,
   Slide,
+  TextField,
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getAllBookings, updateBooking } from '../../services/bookingService';
 
@@ -32,8 +34,10 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 export default function MyBookings() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [rows, setRows] = useState([]);
   const [confirmId, setConfirmId] = useState(null);
+  const [refundReason, setRefundReason] = useState('');
   const [snack, setSnack] = useState({ open: false, msg: '', severity: 'success' });
 
   useEffect(() => {
@@ -51,7 +55,21 @@ export default function MyBookings() {
           : b.status === 'Confirmed'
           ? 'Completed'
           : 'Upcoming',
+      refundRequested: !!b.refundRequested,
+      refundStatus: b.refundStatus || null,
+      daysUntil: (() => {
+        const raw = b.travelDate || b.createdAt;
+        if (!raw) return null;
+        const tripDate = new Date(raw);
+        if (Number.isNaN(tripDate.getTime())) return null;
+        const dTrip = new Date(tripDate);
+        const dNow = new Date();
+        dTrip.setHours(0, 0, 0, 0);
+        dNow.setHours(0, 0, 0, 0);
+        return Math.round((dTrip.getTime() - dNow.getTime()) / (24 * 60 * 60 * 1000));
+      })(),
     }));
+
     setRows(mapped);
   }, [user]);
 
@@ -59,11 +77,20 @@ export default function MyBookings() {
 
   const handleCancel = (id) => setConfirmId(id);
   const confirmCancel = () => {
-    setRows((r) => r.map((x) => (x.id === confirmId ? { ...x, status: 'Cancelled' } : x)));
+    setRows((r) =>
+      r.map((x) =>
+        x.id === confirmId ? { ...x, status: 'Cancelled', refundRequested: true } : x
+      )
+    );
     try {
-      updateBooking(confirmId, { status: 'Cancelled' });
+      updateBooking(confirmId, {
+        status: 'Cancelled',
+        refundRequested: true,
+        refundReason: refundReason.trim() || undefined,
+      });
     } catch {}
     setSnack({ open: true, msg: 'Booking Cancelled Successfully', severity: 'success' });
+    setRefundReason('');
     setConfirmId(null);
   };
 
@@ -124,24 +151,45 @@ export default function MyBookings() {
                     <TableCell>{row.destination}</TableCell>
                     <TableCell>{row.date}</TableCell>
                     <TableCell>
-                      <Chip
-                        label={row.status}
-                        size="small"
-                        color={
-                          row.status === 'Upcoming'
-                            ? 'primary'
-                            : row.status === 'Completed'
-                            ? 'success'
-                            : 'default'
-                        }
-                        variant={row.status === 'Cancelled' ? 'outlined' : 'filled'}
-                      />
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                        <Chip
+                          label={row.status}
+                          size="small"
+                          color={
+                            row.status === 'Upcoming'
+                              ? 'primary'
+                              : row.status === 'Completed'
+                              ? 'success'
+                              : 'default'
+                          }
+                          variant={row.status === 'Cancelled' ? 'outlined' : 'filled'}
+                        />
+                        {row.status === 'Upcoming' &&
+                          typeof row.daysUntil === 'number' &&
+                          row.daysUntil >= 0 && (
+                            <Typography variant="caption" color="text.secondary">
+                              {row.daysUntil === 0
+                                ? 'Trip is today'
+                                : `Trip in ${row.daysUntil} day(s)`}
+                            </Typography>
+                          )}
+                        {row.status === 'Cancelled' && row.refundRequested && (
+                          <Typography variant="caption" color="text.secondary">
+                            Refund requested
+                          </Typography>
+                        )}
+                      </Box>
                     </TableCell>
                     <TableCell align="right">
                       <Stack direction="row" spacing={1} justifyContent="flex-end">
-                        <Button size="small" variant="outlined">
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() => navigate(`/booking/${row.id}/invoice`)}
+                        >
                           View Invoice
                         </Button>
+
                         <Button
                           size="small"
                           color="error"
@@ -163,8 +211,19 @@ export default function MyBookings() {
         <Dialog open={!!confirmId} onClose={() => setConfirmId(null)} TransitionComponent={Transition}>
           <DialogTitle>Cancel this booking?</DialogTitle>
           <DialogContent>
-            Are you sure you want to cancel this booking? This action cannot be undone.
+            <Typography sx={{ mb: 2 }}>
+              Are you sure you want to cancel this booking? This action cannot be undone.
+            </Typography>
+            <TextField
+              fullWidth
+              label="Reason for refund (optional)"
+              multiline
+              minRows={2}
+              value={refundReason}
+              onChange={(e) => setRefundReason(e.target.value)}
+            />
           </DialogContent>
+
           <DialogActions>
             <Button onClick={() => setConfirmId(null)}>No</Button>
             <Button color="error" variant="contained" onClick={confirmCancel}>

@@ -79,6 +79,26 @@ export default function SalesAnalytics({ standalone = true }) {
   const conversionRate = totalInRange ? Math.round((totalConfirmed / totalInRange) * 100) : 0;
   const totalRevenue = confirmed.reduce((s, b) => s + (b.amount || 0), 0);
 
+  const revenueByPackage = confirmed.reduce((acc, b) => {
+    const key = b.packageName || b.destination || 'Package';
+    acc[key] = (acc[key] || 0) + (b.amount || 0);
+    return acc;
+  }, {});
+  const topPackageBars = Object.entries(revenueByPackage)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([label, value]) => ({ label, value }));
+
+  const revenueByCustomer = confirmed.reduce((acc, b) => {
+    const key = b.userEmail || b.customer || 'Customer';
+    acc[key] = (acc[key] || 0) + (b.amount || 0);
+    return acc;
+  }, {});
+  const topCustomerBars = Object.entries(revenueByCustomer)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([label, value]) => ({ label, value }));
+
   return (
     <Box sx={{ minHeight: 'calc(100vh - 120px)', backgroundColor: 'var(--bg)' }}>
       {standalone && (
@@ -139,6 +159,35 @@ export default function SalesAnalytics({ standalone = true }) {
                 <Typography color="text.secondary">No data</Typography>
               ) : (
                 <SimpleBarChart data={topDestBars} />
+              )}
+              </Paper>
+            </Fade>
+          </Grid>
+        </Grid>
+
+        <Grid container spacing={2} sx={{ mt: 2 }}>
+          <Grid item xs={12} md={6}>
+            <Fade in timeout={420}>
+              <Paper sx={{ p: 2, borderRadius: '20px', border: '1px solid var(--border)' }}>
+              <Typography variant="h6">Top Packages (by revenue)</Typography>
+              <Divider sx={{ my: 1 }} />
+              {topPackageBars.length === 0 ? (
+                <Typography color="text.secondary">No data</Typography>
+              ) : (
+                <SimpleBarChart data={topPackageBars} />
+              )}
+              </Paper>
+            </Fade>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Fade in timeout={450}>
+              <Paper sx={{ p: 2, borderRadius: '20px', border: '1px solid var(--border)' }}>
+              <Typography variant="h6">Top Customers (by revenue)</Typography>
+              <Divider sx={{ my: 1 }} />
+              {topCustomerBars.length === 0 ? (
+                <Typography color="text.secondary">No data</Typography>
+              ) : (
+                <SimpleBarChart data={topCustomerBars} />
               )}
               </Paper>
             </Fade>

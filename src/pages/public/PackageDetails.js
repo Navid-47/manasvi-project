@@ -56,6 +56,24 @@ const PackageDetails = () => {
   const highlights = pkg.highlights || [];
   const inclusions = pkg.inclusions || [];
   const difficulty = pkg.difficulty || '';
+  const rawItinerary = pkg.itinerary;
+  const itinerary = Array.isArray(rawItinerary)
+    ? rawItinerary
+    : rawItinerary
+    ? String(rawItinerary)
+        .split('\n')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : [];
+  const rawExclusions = pkg.exclusions;
+  const exclusions = Array.isArray(rawExclusions)
+    ? rawExclusions
+    : rawExclusions
+    ? String(rawExclusions)
+        .split('\n')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : [];
 
   return (
     <div className="py-16 bg-bg">
@@ -96,6 +114,32 @@ const PackageDetails = () => {
                   <ul className="list-disc list-inside text-sm text-text-muted space-y-1">
                     {inclusions.map((inc, i) => (
                       <li key={i}>{inc}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+
+              {itinerary.length > 0 && (
+                <>
+                  <Typography variant="h6" className="mb-3 font-bold">
+                    Itinerary
+                  </Typography>
+                  <ul className="list-disc list-inside text-sm text-text-muted space-y-1">
+                    {itinerary.map((item, i) => (
+                      <li key={i}>{item}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+
+              {exclusions.length > 0 && (
+                <>
+                  <Typography variant="h6" className="mb-3 font-bold">
+                    Exclusions
+                  </Typography>
+                  <ul className="list-disc list-inside text-sm text-text-muted space-y-1">
+                    {exclusions.map((exc, i) => (
+                      <li key={i}>{exc}</li>
                     ))}
                   </ul>
                 </>

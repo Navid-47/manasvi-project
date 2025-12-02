@@ -32,6 +32,7 @@ import Profile from './pages/customer/Profile';
 import Wallet from './pages/customer/Wallet';
 import BookingForm from './pages/customer/BookingForm';
 import BookingSummary from './pages/customer/BookingSummary';
+import Invoice from './pages/customer/Invoice';
 
 // Admin (mirrors customer dashboard pattern)
 import AdminLayout from './pages/admin/AdminLayout';
@@ -73,6 +74,7 @@ function AppContent() {
           <Route element={<ProtectedRoute />}>
             <Route path="/book/:packageId" element={<BookingForm />} />
             <Route path="/booking/:bookingId/summary" element={<BookingSummary />} />
+            <Route path="/booking/:bookingId/invoice" element={<Invoice />} />
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/payment/failure" element={<PaymentFailure />} />
             <Route path="/payment/processing" element={<PaymentCheckout />} />

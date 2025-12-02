@@ -1,12 +1,33 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { CheckCircle } from '@mui/icons-material';
+import { getBookingById } from '../../services/bookingService';
 
 const PaymentSuccess = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const bookingId = location.state?.bookingId;
   const paymentId = location.state?.paymentId;
+  const booking = bookingId ? getBookingById(bookingId) : null;
+
+  let travelDateLabel = '';
+  let destination = '';
+  let daysUntil = null;
+  if (booking) {
+    destination = booking.destination || '';
+    const rawDate = booking.travelDate || booking.createdAt;
+    if (rawDate) {
+      const tripDate = new Date(rawDate);
+      if (!Number.isNaN(tripDate.getTime())) {
+        const dTrip = new Date(tripDate);
+        const dNow = new Date();
+        dTrip.setHours(0, 0, 0, 0);
+        dNow.setHours(0, 0, 0, 0);
+        daysUntil = Math.round((dTrip.getTime() - dNow.getTime()) / (24 * 60 * 60 * 1000));
+        travelDateLabel = dTrip.toLocaleDateString();
+      }
+    }
+  }
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center bg-bg">
@@ -21,6 +42,18 @@ const PaymentSuccess = () => {
         )}
         {paymentId && (
           <p className="text-sm text-text-muted mb-4">Transaction ID: {paymentId}</p>
+        )}
+        {booking && travelDateLabel && (
+          <p className="text-sm text-text-muted mb-1">
+            Trip: {booking.packageName || 'Travel Package'}{destination ? ` • ${destination}` : ''} on {travelDateLabel}
+          </p>
+        )}
+        {typeof daysUntil === 'number' && daysUntil >= 0 && (
+          <p className="text-sm text-green-600 mb-4">
+            {daysUntil === 0
+              ? 'Your trip is today. Have a wonderful journey!'
+              : `We will remind you about this trip in ${daysUntil} day(s).`}
+          </p>
         )}
         <button
           className="bg-brand text-white px-6 py-2 rounded-lg hover-brand mr-2"

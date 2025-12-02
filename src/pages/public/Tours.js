@@ -10,7 +10,11 @@ const Tours = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortBy, setSortBy] = useState('');
+  const [destinationFilter, setDestinationFilter] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+
   const itemsPerPage = 6;
   const navigate = useNavigate();
 
@@ -33,7 +37,16 @@ const Tours = () => {
       const matchesSearch = name.includes(searchTerm.toLowerCase());
       const category = tour.category || '';
       const matchesCategory = selectedCategory === '' || category === selectedCategory;
-      return matchesSearch && matchesCategory;
+      const destination = (tour.destination || tour.location || '').toLowerCase();
+      const matchesDestination =
+        destinationFilter.trim() === '' ||
+        destination.includes(destinationFilter.trim().toLowerCase());
+      const price = Number(tour.pricePerPerson ?? tour.price ?? 0);
+      const hasMin = minPrice !== '' && !Number.isNaN(Number(minPrice));
+      const hasMax = maxPrice !== '' && !Number.isNaN(Number(maxPrice));
+      const matchesMin = !hasMin || price >= Number(minPrice);
+      const matchesMax = !hasMax || price <= Number(maxPrice);
+      return matchesSearch && matchesCategory && matchesDestination && matchesMin && matchesMax;
     })
     .sort((a, b) => {
       const priceA = Number(a.pricePerPerson ?? a.price ?? 0);
@@ -89,6 +102,19 @@ const Tours = () => {
               />
             </div>
 
+            <div>
+              <TextField
+                fullWidth
+                label="Destination"
+                variant="outlined"
+                value={destinationFilter}
+                onChange={(e) => {
+                  setDestinationFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+
             {/* Category Filter */}
             <div>
               <FormControl fullWidth>
@@ -127,6 +153,31 @@ const Tours = () => {
                   ))}
                 </Select>
               </FormControl>
+            </div>
+
+            <div className="md:col-span-2 flex flex-col md:flex-row gap-4">
+              <TextField
+                fullWidth
+                type="number"
+                label="Min price (₹)"
+                variant="outlined"
+                value={minPrice}
+                onChange={(e) => {
+                  setMinPrice(e.target.value);
+                  setCurrentPage(1);
+                }}
+              />
+              <TextField
+                fullWidth
+                type="number"
+                label="Max price (₹)"
+                variant="outlined"
+                value={maxPrice}
+                onChange={(e) => {
+                  setMaxPrice(e.target.value);
+                  setCurrentPage(1);
+                }}
+              />
             </div>
           </div>
 
@@ -235,6 +286,9 @@ const Tours = () => {
                 setSearchTerm('');
                 setSelectedCategory('');
                 setSortBy('');
+                setDestinationFilter('');
+                setMinPrice('');
+                setMaxPrice('');
                 setCurrentPage(1);
               }}
             >

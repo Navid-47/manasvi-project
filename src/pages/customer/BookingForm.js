@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Box, TextField, Typography, Button, Paper, Grid } from '@mui/material';
 import Loader from '../../components/Loader';
@@ -15,6 +15,37 @@ const BookingForm = () => {
   const [travelers, setTravelers] = useState(1);
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const [travelersDetails, setTravelersDetails] = useState(() =>
+    Array.from({ length: Number(travelers) || 1 }, () => ({
+      name: '',
+      age: '',
+      contact: '',
+      passportNumber: '',
+    }))
+  );
+
+  useEffect(() => {
+    const count = Number(travelers) || 1;
+    setTravelersDetails((prev) => {
+      const arr = Array.isArray(prev) ? [...prev] : [];
+      if (arr.length < count) {
+        return [
+          ...arr,
+          ...Array.from({ length: count - arr.length }, () => ({
+            name: '',
+            age: '',
+            contact: '',
+            passportNumber: '',
+          })),
+        ];
+      }
+      if (arr.length > count) {
+        return arr.slice(0, count);
+      }
+      return arr;
+    });
+  }, [travelers]);
 
   if (loading) {
     return <Loader fullScreen label="Loading booking form..." />;
@@ -37,6 +68,10 @@ const BookingForm = () => {
     );
   }
 
+  const pricePerPerson = Number(pkg.pricePerPerson ?? pkg.price ?? 0);
+  const totalTravelers = Number(travelers) || 1;
+  const totalAmount = pricePerPerson * totalTravelers;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!travelDate) return;
@@ -48,8 +83,9 @@ const BookingForm = () => {
         packageName: pkg.name || pkg.title || 'Travel Package',
         destination: pkg.destination || pkg.location || '',
         travelDate,
-        travelers: Number(travelers) || 1,
-        amount: Number(pkg.pricePerPerson ?? pkg.price ?? 0),
+        travelers: totalTravelers,
+        travelersDetails,
+        amount: totalAmount,
         userEmail: user?.email || null,
         notes: notes.trim() || undefined,
       });
@@ -100,6 +136,84 @@ const BookingForm = () => {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
               />
+              {travelersDetails.map((t, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    border: '1px solid var(--border)',
+                    borderRadius: 1,
+                    p: 2,
+                  }}
+                >
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+                    {`Traveler ${index + 1}`}
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        label="Full name"
+                        value={t.name}
+                        onChange={(e) =>
+                          setTravelersDetails((prev) =>
+                            prev.map((item, i) =>
+                              i === index ? { ...item, name: e.target.value } : item
+                            )
+                          )
+                        }
+                        required
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={3}>
+                      <TextField
+                        fullWidth
+                        label="Age"
+                        type="number"
+                        inputProps={{ min: 0 }}
+                        value={t.age}
+                        onChange={(e) =>
+                          setTravelersDetails((prev) =>
+                            prev.map((item, i) =>
+                              i === index ? { ...item, age: e.target.value } : item
+                            )
+                          )
+                        }
+                        required
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={3}>
+                      <TextField
+                        fullWidth
+                        label="Contact number"
+                        value={t.contact}
+                        onChange={(e) =>
+                          setTravelersDetails((prev) =>
+                            prev.map((item, i) =>
+                              i === index ? { ...item, contact: e.target.value } : item
+                            )
+                          )
+                        }
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        label="Passport number (if applicable)"
+                        value={t.passportNumber}
+                        onChange={(e) =>
+                          setTravelersDetails((prev) =>
+                            prev.map((item, i) =>
+                              i === index
+                                ? { ...item, passportNumber: e.target.value }
+                                : item
+                            )
+                          )
+                        }
+                      />
+                    </Grid>
+                  </Grid>
+                </Box>
+              ))}
               <Button
                 type="submit"
                 variant="contained"
@@ -133,7 +247,10 @@ const BookingForm = () => {
               {pkg.duration || (pkg.durationDays ? `${pkg.durationDays} days` : '')}
             </Typography>
             <Typography variant="h6" sx={{ color: 'green', fontWeight: 700 }}>
-              ₹{Number(pkg.pricePerPerson ?? pkg.price ?? 0).toLocaleString()}
+              ₹{pricePerPerson.toLocaleString()}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              {`Total for ${totalTravelers} traveler(s): ₹${totalAmount.toLocaleString()}`}
             </Typography>
           </Paper>
         </Grid>
