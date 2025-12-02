@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Loader from '../../components/Loader';
 import { getBookingById, updateBooking } from '../../services/bookingService';
 import { createPayment } from '../../services/paymentService';
+import { addCustomerNotification, addAdminNotification } from '../../services/notificationService';
 
 const PaymentCheckout = () => {
   const location = useLocation();
@@ -31,6 +32,23 @@ const PaymentCheckout = () => {
           packageName: booking.packageName || 'Travel Package',
         });
         updateBooking(booking.id, { status: 'Confirmed' });
+
+        try {
+          if (booking.userEmail) {
+            addCustomerNotification(
+              booking.userEmail,
+              `Your booking for ${booking.packageName || 'Travel Package'} is confirmed`
+            );
+          }
+          addAdminNotification(
+            `New booking ${booking.id} confirmed${
+              booking.packageName ? ` • ${booking.packageName}` : ''
+            }`
+          );
+        } catch {
+          // ignore notification errors
+        }
+
         navigate('/payment/success', {
           replace: true,
           state: { bookingId: booking.id, paymentId: payment.id },

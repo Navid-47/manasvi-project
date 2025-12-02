@@ -1,5 +1,6 @@
 // src/components/CustomerNavbar.js
 import React, { useEffect, useState } from 'react';
+
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import {
@@ -24,6 +25,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { useAuth } from '../context/AuthContext';
+import NotificationBell from './NotificationBell';
+import { getNotificationsForUser, markAllAsReadForUser } from '../services/notificationService';
 
 const CustomerNavbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -34,6 +37,7 @@ const CustomerNavbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [notifications, setNotifications] = useState([]);
 
   const handleScroll = () => setIsScrolled(window.scrollY > 10);
 
@@ -42,6 +46,32 @@ const CustomerNavbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    if (!user) {
+      setNotifications([]);
+      return;
+    }
+
+    const refresh = () => {
+      try {
+        setNotifications(getNotificationsForUser(user));
+      } catch {
+        // ignore
+      }
+    };
+
+    refresh();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('tm_notifications_updated', refresh);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('tm_notifications_updated', refresh);
+      }
+    };
+  }, [user]);
+
   const handleDrawerToggle = () => setMobileOpen((p) => !p);
   const handleSearchToggle = () => setSearchOpen((p) => !p);
   const handleSearch = (e) => {
@@ -49,6 +79,15 @@ const CustomerNavbar = () => {
     console.log('Searching for:', searchTerm);
     setSearchOpen(false);
     setSearchTerm('');
+  };
+
+  const handleReadAllNotifications = () => {
+    if (!user) return;
+    try {
+      markAllAsReadForUser(user);
+    } catch {
+      // ignore
+    }
   };
 
   const displayName = user?.userName || (user?.email ? user.email.split('@')[0] : 'User');
@@ -140,6 +179,13 @@ const CustomerNavbar = () => {
             >
               <SearchIcon />
             </IconButton>
+
+            {user && (
+              <NotificationBell
+                notifications={notifications}
+                onReadAll={handleReadAllNotifications}
+              />
+            )}
 
             {/* Profile Avatar + Menu */}
             <Box className="flex items-center gap-2">

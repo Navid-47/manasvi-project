@@ -27,6 +27,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getAllBookings, updateBooking } from '../../services/bookingService';
+import { addAdminNotification } from '../../services/notificationService';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="down" ref={ref} {...props} />;
@@ -77,6 +78,8 @@ export default function MyBookings() {
 
   const handleCancel = (id) => setConfirmId(id);
   const confirmCancel = () => {
+    const bookingRow = rows.find((x) => x.id === confirmId) || null;
+
     setRows((r) =>
       r.map((x) =>
         x.id === confirmId ? { ...x, status: 'Cancelled', refundRequested: true } : x
@@ -88,7 +91,22 @@ export default function MyBookings() {
         refundRequested: true,
         refundReason: refundReason.trim() || undefined,
       });
+
+      try {
+        const titleParts = [];
+        titleParts.push(`Booking ${bookingRow?.id || confirmId} cancelled`);
+        if (bookingRow?.destination) {
+          titleParts.push(`• ${bookingRow.destination}`);
+        }
+        if (user?.email) {
+          titleParts.push(`by ${user.email}`);
+        }
+        addAdminNotification(titleParts.join(' '));
+      } catch {
+        // ignore notification errors
+      }
     } catch {}
+
     setSnack({ open: true, msg: 'Booking Cancelled Successfully', severity: 'success' });
     setRefundReason('');
     setConfirmId(null);

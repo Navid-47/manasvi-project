@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AppBar, Toolbar, IconButton, Drawer, List, ListItem, ListItemText, TextField, Avatar, Menu, MenuItem, Divider, Tooltip, Box, Typography } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -7,6 +8,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import NotificationBell from './NotificationBell';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { useAuth } from '../context/AuthContext';
+import { getNotificationsForUser, markAllAsReadForUser } from '../services/notificationService';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -32,6 +34,8 @@ const Navbar = () => {
     };
   }, []);
 
+  const [notifications, setNotifications] = useState([]);
+
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
@@ -51,6 +55,32 @@ const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
 
   const isLoggedIn = !!isAuthenticated;
+  useEffect(() => {
+    if (!isLoggedIn || !user) {
+      setNotifications([]);
+      return;
+    }
+
+    const refresh = () => {
+      try {
+        setNotifications(getNotificationsForUser(user));
+      } catch {
+        // ignore
+      }
+    };
+
+    refresh();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('tm_notifications_updated', refresh);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('tm_notifications_updated', refresh);
+      }
+    };
+  }, [isLoggedIn, user]);
+
   const displayName = user?.userName || (user?.email ? user.email.split('@')[0] : 'User');
   const initials = displayName
     .split('.')
@@ -89,10 +119,14 @@ const Navbar = () => {
     { text: 'Contact', path: '/contact' }
   ];
 
-  const sampleNotifications = [
-    { id: 1, title: 'Your booking was confirmed', time: '2h ago', read: false },
-    { id: 2, title: 'Payment received', time: 'Yesterday', read: true },
-  ];
+  const handleReadAllNotifications = () => {
+    if (!user) return;
+    try {
+      markAllAsReadForUser(user);
+    } catch {
+      // ignore
+    }
+  };
 
   return (
     <>
@@ -144,8 +178,8 @@ const Navbar = () => {
             </IconButton>
             {isLoggedIn && (
               <NotificationBell
-                notifications={sampleNotifications}
-                onReadAll={() => {}}
+                notifications={notifications}
+                onReadAll={handleReadAllNotifications}
               />
             )}
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TextField, Button, Link, Box, Alert, CircularProgress } from '@mui/material';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+
 import { Email, Lock } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { getUserByEmail } from '../../services/userService';
@@ -13,7 +14,6 @@ const Login = () => {
   const [loginError, setLoginError] = useState('');
   const [animatedSections, setAnimatedSections] = useState([]);
   const navigate = useNavigate();
-  const location = useLocation();
   const { login } = useAuth();
 
   useEffect(() => {
