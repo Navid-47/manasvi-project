@@ -1,17 +1,38 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Box, Typography, Button, useTheme, useMediaQuery } from '@mui/material';
+import { 
+  Box, 
+  Typography, 
+  Button, 
+  useTheme, 
+  useMediaQuery 
+} from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { Link } from 'react-router-dom';
 
 const HeroSection = styled(Box)(({ theme }) => ({
   minHeight: '100vh',
-  background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)',
+  width: '100%',
   position: 'relative',
   overflow: 'hidden',
   display: 'flex',
+  flexDirection: 'column',
   alignItems: 'center',
+  justifyContent: 'flex-start',
   color: theme.palette.common.white,
+  margin: 0,
+  padding: '80px 0 0', // Reduced top padding to move content higher
+  background: theme.palette.primary.main, // Fallback background color
   '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'linear-gradient(135deg, rgba(15, 32, 39, 0.85) 0%, rgba(32, 58, 67, 0.85) 50%, rgba(44, 83, 100, 0.85) 100%)',
+    zIndex: 1,
+  },
+  '&::after': {
     content: '""',
     position: 'absolute',
     top: 0,
@@ -22,21 +43,51 @@ const HeroSection = styled(Box)(({ theme }) => ({
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
-    opacity: 0.4,
-    zIndex: 1,
-    transition: 'opacity 1s ease-in-out',
+    backgroundAttachment: 'scroll',
+    zIndex: 0,
+    height: '100%',
   },
 }));
 
 const HeroContent = styled(Box)(({ theme }) => ({
   position: 'relative',
   zIndex: 2,
-  padding: theme.spacing(8, 2),
+  padding: theme.spacing(4, 2, 2), // Reduced padding to move content up
   textAlign: 'center',
-  maxWidth: '800px',
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'flex-start',
+  alignItems: 'center',
+  maxWidth: '1000px',
   margin: '0 auto',
+  width: '90%',
+  animation: 'fadeInUp 1s ease-out',
+  '@keyframes fadeInUp': {
+    '0%': { opacity: 0, transform: 'translateY(20px)' },
+    '100%': { opacity: 1, transform: 'translateY(0)' },
+  },
   [theme.breakpoints.up('md')]: {
-    padding: theme.spacing(12, 2),
+    padding: theme.spacing(4, 4, 2), // Reduced vertical padding
+    marginTop: '2%', // Reduced margin to move content higher
+  },
+  '& h1': {
+    fontSize: '3.5rem',
+    fontWeight: 800,
+    marginBottom: theme.spacing(2),
+    textShadow: '0 2px 10px rgba(0,0,0,0.3)',
+    [theme.breakpoints.down('sm')]: {
+      fontSize: '2.5rem',
+    },
+  },
+  '& h6': {
+    fontSize: '1.5rem',
+    fontWeight: 400,
+    marginBottom: theme.spacing(4),
+    textShadow: '0 1px 3px rgba(0,0,0,0.3)',
+    [theme.breakpoints.down('sm')]: {
+      fontSize: '1.2rem',
+    },
   },
 }));
 
@@ -63,11 +114,44 @@ const IndicatorDot = styled(Box)(({ theme, active }) => ({
   },
 }));
 
+const StyledButton = styled(Button)(({ theme }) => ({
+  marginTop: theme.spacing(2),
+  padding: theme.spacing(1.5, 4),
+  fontSize: '1.1rem',
+  borderRadius: '50px',
+  textTransform: 'none',
+  fontWeight: 600,
+  background: 'linear-gradient(45deg, var(--primary) 0%, var(--primary-dark) 100%)',
+  color: 'white',
+  boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+  transition: 'all 0.3s ease',
+  position: 'relative',
+  overflow: 'hidden',
+  '&:hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: '0 6px 20px rgba(0,0,0,0.3)',
+    '&::before': {
+      transform: 'translateX(100%)',
+    },
+  },
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(45deg, var(--accent) 0%, var(--accent-dark) 100%)',
+    zIndex: -1,
+    transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+    transform: 'translateX(-100%)',
+  },
+}));
+
 const Hero = ({ title, subtitle, ctaText, ctaLink }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
-  // Carousel images wrapped in useMemo to prevent re-creation on every render
+
   const heroImages = useMemo(() => [
     {
       url: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
@@ -103,7 +187,6 @@ const Hero = ({ title, subtitle, ctaText, ctaLink }) => {
     return () => clearInterval(interval);
   }, [heroImages]);
 
-  // Update CSS variable for background image
   useEffect(() => {
     const root = document.documentElement;
     root.style.setProperty('--hero-bg-image', `url('${heroImages[currentImageIndex].url}')`);
@@ -141,7 +224,7 @@ const Hero = ({ title, subtitle, ctaText, ctaLink }) => {
         >
           {heroImages[currentImageIndex].subtitle}
         </Typography>
-        <Button
+        <StyledButton
           variant="contained"
           color="primary"
           size="large"
@@ -164,7 +247,7 @@ const Hero = ({ title, subtitle, ctaText, ctaLink }) => {
           }}
         >
           {ctaText}
-        </Button>
+        </StyledButton>
       </HeroContent>
       
       {/* Carousel Indicators */}
@@ -177,6 +260,19 @@ const Hero = ({ title, subtitle, ctaText, ctaLink }) => {
           />
         ))}
       </CarouselIndicator>
+      
+      <Box 
+        sx={{
+          position: 'absolute',
+          bottom: '100px',
+          left: 0,
+          right: 0,
+          height: '200px',
+          background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.7))',
+          zIndex: 1,
+          pointerEvents: 'none'
+        }}
+      />
     </HeroSection>
   );
 };

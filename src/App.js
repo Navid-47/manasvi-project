@@ -38,10 +38,11 @@ import SalesAnalytics from './pages/admin/SalesAnalytics';
 
 function AppContent() {
   const location = useLocation();
-  // Hide the public Navbar/Footer on customer and admin dashboard routes
+  // Hide the public Navbar/Footer on customer dashboard, admin dashboard, and auth pages
   const isCustomerDashboard = location.pathname.startsWith('/user-dashboard');
   const isAdminDashboard = location.pathname.startsWith('/admin-dashboard');
-  const showPublicShell = !(isCustomerDashboard || isAdminDashboard);
+  const isAuthPage = ['/login', '/register', '/forgot-password'].includes(location.pathname);
+  const showPublicShell = !(isCustomerDashboard || isAdminDashboard || isAuthPage);
 
   return (
     <div className="App flex flex-col min-h-screen">

@@ -198,97 +198,75 @@ const Home = () => {
         ctaLink="/tours"
       />
 
-      {/* Search Section */}
-      <section className="py-16 bg-bg -mt-20 relative z-10">
+      {/* Search Section - Overlay on Hero */}
+      <section className="relative z-10 -mt-40 mb-20">
         <div className="container mx-auto px-4">
-          <div className="search-card-wrapper max-w-6xl mx-auto rounded-2xl shadow-2xl overflow-visible">
-            <div className="p-8 bg-gradient-to-r from-blue-100 via-indigo-50 to-purple-100">
-              <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold text-gray-800 mb-2">Find Your Perfect Trip</h2>
-                <p className="text-gray-600">Search through our amazing destinations and experiences</p>
+          <div className="max-w-6xl mx-auto rounded-xl shadow-2xl overflow-hidden bg-white bg-opacity-95 backdrop-blur-sm">
+            <div className="p-6">
+              <div className="text-center mb-4">
+                <h2 className="text-2xl font-bold text-gray-800">Find Your Perfect Trip</h2>
               </div>
-              <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-5 gap-6">
-                <div className="md:col-span-2 form-element">
-                  <div className="relative">
-                    <label className="block text-gray-700 text-sm font-bold mb-2 form-label" htmlFor="destination">
-                      Destination
-                    </label>
-                    <FormControl fullWidth variant="outlined" className="bg-white rounded-lg shadow-sm">
-                      <Select
-                        value={destination}
-                        onChange={(e) => setDestination(e.target.value)}
-                        displayEmpty
-                        className="rounded-lg"
-                      >
-                        <MenuItem value="" disabled>
-                          <em>Select a destination</em>
+              <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div className="md:col-span-2">
+                  <FormControl fullWidth variant="outlined" size="small">
+                    <Select
+                      value={destination}
+                      onChange={(e) => setDestination(e.target.value)}
+                      displayEmpty
+                      className="rounded-lg bg-white"
+                    >
+                      <MenuItem value="" disabled>
+                        <em>Select Destination</em>
+                      </MenuItem>
+                      {destinations.map((dest) => (
+                        <MenuItem key={dest.value} value={dest.value}>
+                          {dest.label}
                         </MenuItem>
-                        {destinations.map((dest) => (
-                          <MenuItem key={dest.value} value={dest.value}>
-                            {dest.label}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </div>
+                      ))}
+                    </Select>
+                  </FormControl>
                 </div>
-                <div className="form-element">
-                  <div className="relative">
-                    <label className="block text-gray-700 text-sm font-bold mb-2 form-label" htmlFor="checkin">
-                      Check-in
-                    </label>
-                    <TextField
-                      fullWidth
-                      type="date"
-                      variant="outlined"
-                      InputLabelProps={{ shrink: true }}
-                      value={checkIn}
-                      onChange={(e) => setCheckIn(e.target.value)}
-                      className="bg-white rounded-lg shadow-sm"
-                    />
-                  </div>
+                <div>
+                  <TextField
+                    fullWidth
+                    type="date"
+                    variant="outlined"
+                    size="small"
+                    InputLabelProps={{ shrink: true }}
+                    value={checkIn}
+                    onChange={(e) => setCheckIn(e.target.value)}
+                    className="bg-white rounded-lg"
+                  />
                 </div>
-                <div className="form-element">
-                  <div className="relative">
-                    <label className="block text-gray-700 text-sm font-bold mb-2 form-label" htmlFor="checkout">
-                      Check-out
-                    </label>
-                    <TextField
-                      fullWidth
-                      type="date"
-                      variant="outlined"
-                      InputLabelProps={{ shrink: true }}
-                      value={checkOut}
-                      onChange={(e) => setCheckOut(e.target.value)}
-                      className="bg-white rounded-lg shadow-sm"
-                    />
-                  </div>
+                <div>
+                  <TextField
+                    fullWidth
+                    type="date"
+                    variant="outlined"
+                    size="small"
+                    InputLabelProps={{ shrink: true }}
+                    value={checkOut}
+                    onChange={(e) => setCheckOut(e.target.value)}
+                    className="bg-white rounded-lg"
+                  />
                 </div>
-                <div className="form-element">
-                  <div className="relative">
-                    <label className="block text-gray-700 text-sm font-bold mb-2 form-label" htmlFor="travelers">
-                      Travelers
-                    </label>
-                    <FormControl fullWidth variant="outlined" className="bg-white rounded-lg shadow-sm">
-                      <Select
-                        value={travelers}
-                        onChange={(e) => setTravelers(e.target.value)}
-                        className="rounded-lg"
-                      >
-                        {[1, 2, 3, 4, 5, 6].map(num => (
-                          <MenuItem key={num} value={num}>{num} {num === 1 ? 'Traveler' : 'Travelers'}</MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </div>
-                </div>
-                <div className="md:col-span-5 flex justify-center mt-2">
+                <div className="flex items-center gap-2">
+                  <FormControl fullWidth variant="outlined" size="small" className="flex-1">
+                    <Select
+                      value={travelers}
+                      onChange={(e) => setTravelers(e.target.value)}
+                      className="rounded-lg bg-white"
+                    >
+                      {[1, 2, 3, 4, 5, 6].map(num => (
+                        <MenuItem key={num} value={num}>{num} {num === 1 ? 'Person' : 'People'}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
                   <button
                     type="submit"
-                    className="bg-gradient-to-r from-brand to-blue-700 hover:from-brand-dark hover:to-blue-800 text-white font-bold py-4 px-10 rounded-full transition duration-300 flex items-center shadow-lg hover:shadow-xl transform hover:-translate-y-1 w-full md:w-auto justify-center animate-pulse-slow"
+                    className="bg-gradient-to-r from-brand to-blue-700 hover:from-brand-dark hover:to-blue-800 text-white font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center shadow hover:shadow-lg"
                   >
-                    <Search className="mr-2" />
-                    Search Amazing Trips
+                    <Search />
                   </button>
                 </div>
               </form>
