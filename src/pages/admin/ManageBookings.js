@@ -30,33 +30,23 @@ import {
   Avatar,
 } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { getAllBookings, updateBooking } from '../../services/bookingService';
 
 const STATUSES = ['Pending', 'Confirmed', 'Cancelled'];
 
-function useLocalStorage(key, initialValue) {
-  const [value, setValue] = React.useState(() => {
-    try {
-      const stored = localStorage.getItem(key);
-      return stored ? JSON.parse(stored) : initialValue;
-    } catch {
-      return initialValue;
-    }
-  });
-  React.useEffect(() => {
-    try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
-  }, [key, value]);
-  return [value, setValue];
+function mapBookings(source) {
+  return (source || []).map((b) => ({
+    id: b.id,
+    customer: b.customer || b.userEmail || 'Customer',
+    destination: b.destination || b.packageName || '',
+    amount: Number(b.amount) || 0,
+    status: b.status || 'Pending',
+    createdAt: b.createdAt || new Date().toISOString(),
+  }));
 }
 
-const seed = [
-  { id: 'B-1006', customer: 'Aarav Shah', destination: 'Goa', amount: 1299, status: 'Confirmed', createdAt: new Date().toISOString() },
-  { id: 'B-1005', customer: 'Isha Verma', destination: 'Manali', amount: 799, status: 'Pending', createdAt: new Date(Date.now() - 86400000).toISOString() },
-  { id: 'B-1004', customer: 'Rajasthan', destination: 'Jaipur', amount: 0, status: 'Cancelled', createdAt: new Date(Date.now() - 2*86400000).toISOString() },
-  { id: 'B-1003', customer: 'Neha Gupta', destination: 'Ladakh', amount: 1599, status: 'Confirmed', createdAt: new Date(Date.now() - 4*86400000).toISOString() },
-];
-
 export default function ManageBookings({ standalone = true }) {
-  const [bookings, setBookings] = useLocalStorage('admin_bookings', seed);
+  const [bookings, setBookings] = React.useState(() => mapBookings(getAllBookings()));
   const [query, setQuery] = React.useState('');
   const [debouncedQuery, setDebouncedQuery] = React.useState('');
   const [status, setStatus] = React.useState('All');
@@ -109,6 +99,9 @@ export default function ManageBookings({ standalone = true }) {
 
   const bulkUpdate = (newStatus) => {
     setBookings(prev => prev.map(b => selected.includes(b.id) ? { ...b, status: newStatus } : b));
+    selected.forEach((id) => {
+      try { updateBooking(id, { status: newStatus }); } catch {}
+    });
     setSelected([]);
     setToast({ severity: 'success', message: `Updated ${selected.length} booking(s) to ${newStatus}` });
   };
@@ -129,6 +122,7 @@ export default function ManageBookings({ standalone = true }) {
   const closeStatusMenu = () => setStatusMenu({ anchorEl: null, id: null });
   const setStatusInline = (newStatus) => {
     setBookings(prev => prev.map(b => b.id === statusMenu.id ? { ...b, status: newStatus } : b));
+    try { if (statusMenu.id) updateBooking(statusMenu.id, { status: newStatus }); } catch {}
     setToast({ severity: 'success', message: `Status updated to ${newStatus}` });
     closeStatusMenu();
   };
@@ -206,7 +200,12 @@ export default function ManageBookings({ standalone = true }) {
                   <TableCell>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <Avatar sx={{ width: 28, height: 28 }}>
-                        {b.customer.split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase()}
+                        {String(b.customer || '')
+                          .split(' ')
+                          .map((s) => s[0])
+                          .join('')
+                          .slice(0, 2)
+                          .toUpperCase() || 'CU'}
                       </Avatar>
                       <Typography variant="body2">{b.customer}</Typography>
                     </Stack>
@@ -252,7 +251,12 @@ export default function ManageBookings({ standalone = true }) {
         </Fade>
       </Box>
 
-      <Drawer anchor="right" open={drawer.open} onClose={closeDetails} PaperProps={{ sx: { width: { xs: '100%', sm: 420 } } }}>
+      <Drawer
+        anchor="right"
+        open={drawer.open}
+        onClose={closeDetails}
+        PaperProps={{ sx: { width: { xs: '100%', sm: 420 } } }}
+      >
         <Box sx={{ p: 2 }}>
           <Typography variant="h6">Booking Details</Typography>
           <Divider sx={{ my: 2 }} />
@@ -263,15 +267,31 @@ export default function ManageBookings({ standalone = true }) {
               <Typography><b>Destination:</b> {drawer.booking.destination}</Typography>
               <Typography><b>Status:</b> {drawer.booking.status}</Typography>
               <Typography><b>Amount:</b> ₹{(drawer.booking.amount || 0).toLocaleString()}</Typography>
-              <Typography color="text.secondary">Created: {new Date(drawer.booking.createdAt).toLocaleString()}</Typography>
+              <Typography color="text.secondary">
+                Created: {new Date(drawer.booking.createdAt).toLocaleString()}
+              </Typography>
               <Divider sx={{ my: 1 }} />
               <Typography variant="subtitle2">Quick Update</Typography>
               <Stack direction="row" spacing={1}>
-                {STATUSES.map(s => (
-                  <Button key={s} variant="contained" size="small" onClick={() => {
-                    setBookings(prev => prev.map(x => x.id === drawer.booking.id ? { ...x, status: s } : x));
-                    setToast({ severity: 'success', message: `Status updated to ${s}` });
-                  }}>{s}</Button>
+                {STATUSES.map((s) => (
+                  <Button
+                    key={s}
+                    variant="contained"
+                    size="small"
+                    onClick={() => {
+                      setBookings((prev) =>
+                        prev.map((x) =>
+                          x.id === drawer.booking.id ? { ...x, status: s } : x
+                        )
+                      );
+                      try {
+                        updateBooking(drawer.booking.id, { status: s });
+                      } catch {}
+                      setToast({ severity: 'success', message: `Status updated to ${s}` });
+                    }}
+                  >
+                    {s}
+                  </Button>
                 ))}
               </Stack>
             </Stack>
@@ -280,16 +300,21 @@ export default function ManageBookings({ standalone = true }) {
       </Drawer>
 
       <Snackbar open={!!toast} autoHideDuration={2500} onClose={() => setToast(null)}>
-        {toast && <Alert severity={toast.severity} variant="filled">{toast.message}</Alert>}
+        {toast && (
+          <Alert severity={toast.severity} variant="filled">
+            {toast.message}
+          </Alert>
+        )}
       </Snackbar>
 
       <Menu anchorEl={statusMenu.anchorEl} open={Boolean(statusMenu.anchorEl)} onClose={closeStatusMenu}>
-        {STATUSES.map(s => (
-          <MenuItem key={s} onClick={() => setStatusInline(s)}>{s}</MenuItem>
+        {STATUSES.map((s) => (
+          <MenuItem key={s} onClick={() => setStatusInline(s)}>
+            {s}
+          </MenuItem>
         ))}
       </Menu>
     </Box>
   );
 }
-
 

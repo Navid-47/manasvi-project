@@ -30,6 +30,7 @@ export default function Dashboard() {
       <Box
         sx={{
           display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
           backgroundColor: 'var(--bg)',
           minHeight: 'calc(100vh - 120px)',
         }}

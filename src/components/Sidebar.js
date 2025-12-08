@@ -1,4 +1,4 @@
- import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Drawer,
   List,
@@ -15,12 +15,14 @@ import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import PersonIcon from '@mui/icons-material/Person';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const collapsedWidth = 72;
 const expandedWidth = 260;
 
 export default function Sidebar({ onLogout }) {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const items = [
@@ -33,7 +35,7 @@ export default function Sidebar({ onLogout }) {
 
   const handleLogout = () => {
     try {
-      localStorage.removeItem('tm_user');
+      logout();
     } catch {
       /* ignore */
     }
