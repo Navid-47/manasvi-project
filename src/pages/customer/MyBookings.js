@@ -1,5 +1,6 @@
 // src/pages/user/MyBookings.js
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+
 import {
   Box,
   Typography,
@@ -21,35 +22,99 @@ import {
   Stack,
   Fade,
   Slide,
+  TextField,
 } from '@mui/material';
-
-const initial = [
-  { id: 'BKG-001', packageName: 'Himalayan Escape', destination: 'Manali', date: '2025-11-05', status: 'Upcoming' },
-  { id: 'BKG-002', packageName: 'Desert Safari', destination: 'Jaisalmer', date: '2025-07-12', status: 'Completed' },
-  { id: 'BKG-003', packageName: 'Backwater Bliss', destination: 'Alleppey', date: '2025-09-03', status: 'Cancelled' },
-];
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { getAllBookings, updateBooking } from '../../services/bookingService';
+import { addAdminNotification } from '../../services/notificationService';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="down" ref={ref} {...props} />;
 });
 
 export default function MyBookings() {
-  const [rows, setRows] = useState(initial);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [rows, setRows] = useState([]);
   const [confirmId, setConfirmId] = useState(null);
+  const [refundReason, setRefundReason] = useState('');
   const [snack, setSnack] = useState({ open: false, msg: '', severity: 'success' });
+
+  useEffect(() => {
+    const all = getAllBookings();
+    const email = user?.email;
+    const userBookings = email ? all.filter((b) => b.userEmail === email) : all;
+    const mapped = userBookings.map((b) => ({
+      id: b.id,
+      packageName: b.packageName || 'Travel Package',
+      destination: b.destination || '',
+      date: b.travelDate || (b.createdAt ? b.createdAt.slice(0, 10) : ''),
+      status:
+        b.status === 'Cancelled'
+          ? 'Cancelled'
+          : b.status === 'Confirmed'
+          ? 'Completed'
+          : 'Upcoming',
+      refundRequested: !!b.refundRequested,
+      refundStatus: b.refundStatus || null,
+      daysUntil: (() => {
+        const raw = b.travelDate || b.createdAt;
+        if (!raw) return null;
+        const tripDate = new Date(raw);
+        if (Number.isNaN(tripDate.getTime())) return null;
+        const dTrip = new Date(tripDate);
+        const dNow = new Date();
+        dTrip.setHours(0, 0, 0, 0);
+        dNow.setHours(0, 0, 0, 0);
+        return Math.round((dTrip.getTime() - dNow.getTime()) / (24 * 60 * 60 * 1000));
+      })(),
+    }));
+
+    setRows(mapped);
+  }, [user]);
 
   const hasData = useMemo(() => rows.length > 0, [rows]);
 
   const handleCancel = (id) => setConfirmId(id);
   const confirmCancel = () => {
-    setRows((r) => r.map((x) => (x.id === confirmId ? { ...x, status: 'Cancelled' } : x)));
+    const bookingRow = rows.find((x) => x.id === confirmId) || null;
+
+    setRows((r) =>
+      r.map((x) =>
+        x.id === confirmId ? { ...x, status: 'Cancelled', refundRequested: true } : x
+      )
+    );
+    try {
+      updateBooking(confirmId, {
+        status: 'Cancelled',
+        refundRequested: true,
+        refundReason: refundReason.trim() || undefined,
+      });
+
+      try {
+        const titleParts = [];
+        titleParts.push(`Booking ${bookingRow?.id || confirmId} cancelled`);
+        if (bookingRow?.destination) {
+          titleParts.push(`• ${bookingRow.destination}`);
+        }
+        if (user?.email) {
+          titleParts.push(`by ${user.email}`);
+        }
+        addAdminNotification(titleParts.join(' '));
+      } catch {
+        // ignore notification errors
+      }
+    } catch {}
+
     setSnack({ open: true, msg: 'Booking Cancelled Successfully', severity: 'success' });
+    setRefundReason('');
     setConfirmId(null);
   };
 
   return (
     <Fade in timeout={300}>
-      <Box>
+      <Box sx={{ maxWidth: 1100, mx: 'auto', p: { xs: 1.5, md: 2 } }}>
         <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
           My Bookings
         </Typography>
@@ -104,24 +169,45 @@ export default function MyBookings() {
                     <TableCell>{row.destination}</TableCell>
                     <TableCell>{row.date}</TableCell>
                     <TableCell>
-                      <Chip
-                        label={row.status}
-                        size="small"
-                        color={
-                          row.status === 'Upcoming'
-                            ? 'primary'
-                            : row.status === 'Completed'
-                            ? 'success'
-                            : 'default'
-                        }
-                        variant={row.status === 'Cancelled' ? 'outlined' : 'filled'}
-                      />
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                        <Chip
+                          label={row.status}
+                          size="small"
+                          color={
+                            row.status === 'Upcoming'
+                              ? 'primary'
+                              : row.status === 'Completed'
+                              ? 'success'
+                              : 'default'
+                          }
+                          variant={row.status === 'Cancelled' ? 'outlined' : 'filled'}
+                        />
+                        {row.status === 'Upcoming' &&
+                          typeof row.daysUntil === 'number' &&
+                          row.daysUntil >= 0 && (
+                            <Typography variant="caption" color="text.secondary">
+                              {row.daysUntil === 0
+                                ? 'Trip is today'
+                                : `Trip in ${row.daysUntil} day(s)`}
+                            </Typography>
+                          )}
+                        {row.status === 'Cancelled' && row.refundRequested && (
+                          <Typography variant="caption" color="text.secondary">
+                            Refund requested
+                          </Typography>
+                        )}
+                      </Box>
                     </TableCell>
                     <TableCell align="right">
                       <Stack direction="row" spacing={1} justifyContent="flex-end">
-                        <Button size="small" variant="outlined">
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() => navigate(`/booking/${row.id}/invoice`)}
+                        >
                           View Invoice
                         </Button>
+
                         <Button
                           size="small"
                           color="error"
@@ -143,8 +229,19 @@ export default function MyBookings() {
         <Dialog open={!!confirmId} onClose={() => setConfirmId(null)} TransitionComponent={Transition}>
           <DialogTitle>Cancel this booking?</DialogTitle>
           <DialogContent>
-            Are you sure you want to cancel this booking? This action cannot be undone.
+            <Typography sx={{ mb: 2 }}>
+              Are you sure you want to cancel this booking? This action cannot be undone.
+            </Typography>
+            <TextField
+              fullWidth
+              label="Reason for refund (optional)"
+              multiline
+              minRows={2}
+              value={refundReason}
+              onChange={(e) => setRefundReason(e.target.value)}
+            />
           </DialogContent>
+
           <DialogActions>
             <Button onClick={() => setConfirmId(null)}>No</Button>
             <Button color="error" variant="contained" onClick={confirmCancel}>

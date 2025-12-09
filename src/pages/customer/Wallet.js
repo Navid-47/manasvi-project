@@ -1,5 +1,5 @@
 // src/pages/user/Wallet.js
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -18,18 +18,17 @@ import {
   Grow,
   Fade,
 } from '@mui/material';
-
-const mockWallet = {
-  balance: 3500,
-  transactions: [
-    { id: 'WLT-2001', type: 'Credit', amount: 2000, date: '2025-05-18', note: 'Signup bonus' },
-    { id: 'WLT-2002', type: 'Credit', amount: 3000, date: '2025-06-02', note: 'Refund - Cancelled booking' },
-    { id: 'WLT-2003', type: 'Debit', amount: 1500, date: '2025-06-10', note: 'Used on Goa package' },
-  ],
-};
+import { useAuth } from '../../context/AuthContext';
+import { getWalletForUser } from '../../services/walletService';
 
 export default function Wallet() {
-  const [data] = useState(mockWallet);
+  const { user } = useAuth();
+  const [data, setData] = useState({ balance: 0, transactions: [] });
+
+  useEffect(() => {
+    const email = user?.email || null;
+    setData(getWalletForUser(email));
+  }, [user]);
 
   const totalCredits = useMemo(
     () => data.transactions.filter((t) => t.type === 'Credit').reduce((s, t) => s + t.amount, 0),
@@ -41,7 +40,7 @@ export default function Wallet() {
   );
 
   return (
-    <Box sx={{ p: 3, backgroundColor: 'var(--surface)', borderRadius: '16px' }}>
+    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1100, mx: 'auto', backgroundColor: 'var(--surface)', borderRadius: '16px' }}>
       <Fade in timeout={300}>
         <Typography
           variant="h5"
@@ -57,9 +56,9 @@ export default function Wallet() {
       </Fade>
 
       {/* Wallet Summary */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Grid container spacing={3} sx={{ mb: 4 }} alignItems="stretch">
         {/* Wallet Balance */}
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} sm={6} md={4}>
           <Grow in timeout={350}>
             <Paper
               elevation={3}
@@ -67,6 +66,11 @@ export default function Wallet() {
                 p: 3,
                 borderRadius: '16px',
                 textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                height: '100%',
+                minHeight: { xs: 160, sm: 170, md: 180 },
                 transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                 '&:hover': {
                   transform: 'translateY(-4px)',
@@ -101,9 +105,21 @@ export default function Wallet() {
         </Grid>
 
         {/* Total Credits */}
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} sm={6} md={4}>
           <Grow in timeout={420}>
-            <Paper elevation={1} sx={{ p: 3, borderRadius: '16px', textAlign: 'center' }}>
+            <Paper
+              elevation={1}
+              sx={{
+                p: 3,
+                borderRadius: '16px',
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                height: '100%',
+                minHeight: { xs: 140, sm: 150, md: 160 },
+              }}
+            >
               <Typography variant="subtitle2" color="text.secondary">
                 Total Credits
               </Typography>
@@ -115,9 +131,21 @@ export default function Wallet() {
         </Grid>
 
         {/* Total Debits */}
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} sm={6} md={4}>
           <Grow in timeout={500}>
-            <Paper elevation={1} sx={{ p: 3, borderRadius: '16px', textAlign: 'center' }}>
+            <Paper
+              elevation={1}
+              sx={{
+                p: 3,
+                borderRadius: '16px',
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                height: '100%',
+                minHeight: { xs: 140, sm: 150, md: 160 },
+              }}
+            >
               <Typography variant="subtitle2" color="text.secondary">
                 Total Debits
               </Typography>

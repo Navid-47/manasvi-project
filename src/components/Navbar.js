@@ -8,6 +8,7 @@ import {
   List, 
   ListItem, 
   ListItemText, 
+  ListItemIcon,
   TextField, 
   Avatar, 
   Menu, 
@@ -18,12 +19,19 @@ import {
   Typography,
   Container,
   Button,
+  InputAdornment,
   styled
 } from '@mui/material';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import PersonIcon from '@mui/icons-material/Person';
+import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import NotificationBell from './NotificationBell';
+import { useAuth } from '../context/AuthContext';
+import { getNotificationsForUser, markAllAsReadForUser } from '../services/notificationService';
 
 // Styled Components
 const StyledAppBar = styled(AppBar, {
@@ -125,7 +133,36 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Toggle mobile drawer
+  const [notifications, setNotifications] = useState(sampleNotifications);
+  const { user, isAuthenticated, logout } = useAuth();
+
+  // Load notifications
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      setNotifications([]);
+      return;
+    }
+
+    const refresh = () => {
+      try {
+        setNotifications(getNotificationsForUser(user));
+      } catch (error) {
+        console.error('Error loading notifications:', error);
+      }
+    };
+
+    refresh();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('tm_notifications_updated', refresh);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('tm_notifications_updated', refresh);
+      }
+    };
+  }, [isAuthenticated, user]);
+
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
@@ -157,6 +194,28 @@ const Navbar = () => {
     setAnchorEl(null);
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      handleMenuClose();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
+  const handleReadAllNotifications = async () => {
+    if (!user) return;
+    try {
+      await markAllAsReadForUser(user.id);
+      setNotifications(prev => 
+        prev.map(n => ({ ...n, read: true }))
+      );
+    } catch (error) {
+      console.error('Failed to mark notifications as read:', error);
+    }
+  };
+
   // Navigation handlers
   const handleDashboard = () => {
     handleMenuClose();
@@ -168,17 +227,7 @@ const Navbar = () => {
     navigate('/user-dashboard/profile');
   };
 
-  const handleLogout = () => {
-    handleMenuClose();
-    try {
-      localStorage.removeItem('tm_user');
-    } catch (error) {
-      console.error('Error removing user data:', error);
-    }
-    navigate('/login', { replace: true, state: { loggedOut: true } });
-  };
-
-  // Check if user is logged in
+  // User data and authentication state
   const stored = useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem('tm_user')) || null;
@@ -188,10 +237,10 @@ const Navbar = () => {
     }
   }, []);
 
-  const isLoggedIn = !!stored;
-  const displayName = stored?.userName || 'User';
-  const userEmail = stored?.email || '';
-  const userRole = stored?.role || 'Customer';
+  const isLoggedIn = isAuthenticated || !!stored;
+  const displayName = user?.displayName || stored?.userName || 'User';
+  const userEmail = user?.email || stored?.email || '';
+  const userRole = user?.role || stored?.role || 'Customer';
   
   // Generate user initials for avatar
   const initials = useMemo(() => {
@@ -218,10 +267,7 @@ const Navbar = () => {
           <Toolbar disableGutters sx={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
             {/* Logo */}
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Link 
-                to="/" 
-                style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}
-              >
+              <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
                 <Box 
                   sx={{
                     width: 40,
@@ -301,10 +347,12 @@ const Navbar = () => {
                 <SearchIcon />
               </IconButton>
               
-              <NotificationBell
-                notifications={sampleNotifications}
-                onReadAll={() => {}}
-              />
+              {isLoggedIn && (
+                <NotificationBell
+                  notifications={notifications}
+                  onReadAll={handleReadAllNotifications}
+                />
+              )}
 
               {isLoggedIn ? (
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -336,55 +384,47 @@ const Navbar = () => {
                       </Avatar>
                     </IconButton>
                   </Tooltip>
+                  <IconButton
+                    onClick={handleMenuOpen}
+                    size="small"
+                    sx={{ ml: -0.5 }}
+                  >
+                    <ArrowDropDownIcon />
+                  </IconButton>
                   <Menu
                     anchorEl={anchorEl}
                     open={openMenu}
                     onClose={handleMenuClose}
                     anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                     transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-                    PaperProps={{
-                      elevation: 3,
-                      sx: {
-                        mt: 1.5,
-                        minWidth: 220,
-                        borderRadius: '12px',
-                        overflow: 'visible',
-                        '&:before': {
-                          content: '""',
-                          display: 'block',
-                          position: 'absolute',
-                          top: 0,
-                          right: 14,
-                          width: 10,
-                          height: 10,
-                          bgcolor: 'background.paper',
-                          transform: 'translateY(-50%) rotate(45deg)',
-                          zIndex: 0,
-                        },
-                      },
-                    }}
                   >
-                    <Box px={2} py={1.5}>
-                      <Typography variant="subtitle2" fontWeight={600} noWrap>
+                    <Box px={2} py={1}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                         {displayName}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary" noWrap>
-                        {userEmail}
+                      <Typography variant="caption" color="text.secondary">
+                        {userRole} Dashboard
                       </Typography>
                     </Box>
                     <Divider />
                     <MenuItem onClick={handleDashboard}>
-                      <ListItemText>Dashboard</ListItemText>
+                      <ListItemIcon>
+                        <DashboardIcon fontSize="small" />
+                      </ListItemIcon>
+                      Dashboard
                     </MenuItem>
                     <MenuItem onClick={handleMyProfile}>
-                      <ListItemText>My Profile</ListItemText>
+                      <ListItemIcon>
+                        <PersonIcon fontSize="small" />
+                      </ListItemIcon>
+                      My Profile
                     </MenuItem>
                     <Divider />
-                    <MenuItem 
-                      onClick={handleLogout}
-                      sx={{ color: 'error.main' }}
-                    >
-                      <ListItemText>Logout</ListItemText>
+                    <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
+                      <ListItemIcon sx={{ color: 'error.main' }}>
+                        <LogoutIcon fontSize="small" />
+                      </ListItemIcon>
+                      Logout
                     </MenuItem>
                   </Menu>
                 </Box>
@@ -393,18 +433,310 @@ const Navbar = () => {
                   component={Link}
                   to="/login"
                   variant="contained"
+                  color="primary"
                   sx={{
                     ml: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
                     px: 3,
                     py: 1,
-                    fontWeight: 600,
-                    textTransform: 'none',
-                    borderRadius: '8px',
-                    background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
-                    boxShadow: '0 4px 14px rgba(37, 99, 235, 0.3)',
+                    borderRadius: 'var(--radius-md)',
                     '&:hover': {
                       transform: 'translateY(-2px)',
-                      boxShadow: '0 6px 20px rgba(37, 99, 235, 0.4)',
+                      boxShadow: 'var(--shadow-md)',
+                    },
+                  }}
+                >
+                  Sign In
+                </Button>
+              )}
+
+              {/* Mobile menu button */}
+              <IconButton
+                color="inherit"
+                aria-label="open drawer"
+                edge="start"
+                onClick={handleDrawerToggle}
+                sx={{ display: { md: 'none' }, ml: 1 }}
+              >
+                <MenuIcon />
+              </IconButton>
+            </Box>
+          </Toolbar>
+        </Container>
+
+        {/* Search Drawer */}
+        <Drawer
+          anchor="top"
+          open={searchOpen}
+          onClose={handleSearchToggle}
+          PaperProps={{
+            sx: {
+              marginTop: '64px',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              bgcolor: 'background.paper',
+              p: 2,
+            },
+          }}
+          sx={{
+            '& .MuiBackdrop-root': {
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              backdropFilter: 'blur(4px)',
+            },
+          }}
+        >
+          <Container>
+            <form onSubmit={handleSearch}>
+              <Box sx={{ position: 'relative', maxWidth: '800px', mx: 'auto' }}>
+                <TextField
+                  fullWidth
+                  autoFocus
+                  variant="outlined"
+                  placeholder="Search destinations, tours, hotels..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon color="action" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: searchTerm && (
+                      <InputAdornment position="end">
+                        <IconButton
+                          size="small"
+                          onClick={() => setSearchTerm('')}
+                          edge="end"
+                        >
+                          <CloseIcon fontSize="small" />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                    sx: {
+                      borderRadius: 'var(--radius-lg)',
+                      bgcolor: 'background.paper',
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'primary.main',
+                      },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'primary.main',
+                        borderWidth: '2px',
+                      },
+                    },
+                  }}
+                />
+                <Button
+                  type="submit"
+                  variant="contained"
+                  sx={{
+                    position: 'absolute',
+                    right: '4px',
+                    top: '4px',
+                    bottom: '4px',
+                    borderRadius: '8px',
+                    px: 3,
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))',
+                    },
+                  }}
+                >
+                  Search
+                </Button>
+              </Box>
+            </form>
+          </Container>
+        </Drawer>
+
+        {/* Mobile Drawer */}
+        <Drawer
+          variant="temporary"
+          anchor="right"
+          open={mobileOpen}
+          onClose={handleDrawerToggle}
+          ModalProps={{
+            keepMounted: true, // Better open performance on mobile.
+          }}
+          sx={{
+            display: { xs: 'block', md: 'none' },
+            '& .MuiDrawer-paper': { 
+              boxSizing: 'border-box', 
+              width: 280,
+              bgcolor: 'background.paper',
+            },
+          }}
+        >
+          <Box 
+            sx={{ 
+              p: 3, 
+              bgcolor: 'primary.main',
+              color: 'white',
+              background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+            }}
+          >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Box 
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: '10px',
+                    bgcolor: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'primary.main',
+                    fontWeight: 'bold',
+                    fontSize: '1rem',
+                  }}
+                >
+                  TM
+                </Box>
+                <Typography variant="h6" fontWeight={700}>
+                  Travel Manasvi
+                </Typography>
+              </Box>
+              <IconButton 
+                onClick={() => setMobileOpen(false)}
+                sx={{ color: 'white' }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </Box>
+            
+            {/* Profile Section */}
+            {isLoggedIn && (
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 2, 
+                mb: 2, 
+                p: 2, 
+                bgcolor: 'rgba(255,255,255,0.1)', 
+                borderRadius: '12px',
+                backdropFilter: 'blur(8px)'
+              }}>
+                <Avatar 
+                  sx={{ 
+                    width: 48, 
+                    height: 48, 
+                    bgcolor: 'white',
+                    color: 'primary.main',
+                    fontWeight: 'bold',
+                    fontSize: '1rem',
+                  }}
+                >
+                  {initials}
+                </Avatar>
+                <Box>
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    {displayName}
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    {userRole}
+                  </Typography>
+                </Box>
+              </Box>
+            )}
+          </Box>
+
+          <List sx={{ p: 1 }}>
+            {navLinks.map((link) => (
+              <ListItem
+                key={link.text}
+                component={Link}
+                to={link.path}
+                onClick={() => setMobileOpen(false)}
+                sx={{
+                  borderRadius: '8px',
+                  mb: 0.5,
+                  color: location.pathname === link.path ? 'primary.main' : 'text.primary',
+                  backgroundColor: location.pathname === link.path ? 'rgba(37, 99, 235, 0.1)' : 'transparent',
+                  '&:hover': {
+                    backgroundColor: 'action.hover',
+                    color: 'primary.main',
+                  },
+                }}
+              >
+                <ListItemText 
+                  primary={link.text} 
+                  primaryTypographyProps={{
+                    fontWeight: location.pathname === link.path ? 600 : 400,
+                  }}
+                />
+              </ListItem>
+            ))}
+            
+            <Divider sx={{ my: 1 }} />
+            
+            {isLoggedIn ? (
+              <>
+                <ListItem 
+                  button 
+                  onClick={() => {
+                    handleDashboard();
+                    setMobileOpen(false);
+                  }}
+                  sx={{
+                    borderRadius: '8px',
+                    mb: 0.5,
+                    '&:hover': {
+                      color: 'primary.main',
+                      backgroundColor: 'action.hover',
+                    },
+                  }}
+                >
+                  <ListItemText primary="Dashboard" />
+                </ListItem>
+                <ListItem 
+                  button 
+                  onClick={() => {
+                    handleMyProfile();
+                    setMobileOpen(false);
+                  }}
+                  sx={{
+                    borderRadius: '8px',
+                    mb: 0.5,
+                    '&:hover': {
+                      color: 'primary.main',
+                      backgroundColor: 'action.hover',
+                    },
+                  }}
+                >
+                  <ListItemText primary="My Profile" />
+                </ListItem>
+                <ListItem 
+                  button 
+                  onClick={() => {
+                    handleLogout();
+                    setMobileOpen(false);
+                  }}
+                  sx={{
+                    color: 'error.main',
+                    borderRadius: '8px',
+                    '&:hover': {
+                      backgroundColor: 'rgba(244, 67, 54, 0.08)',
+                    },
+                  }}
+                >
+                  <ListItemText primary="Logout" />
+                </ListItem>
+              </>
+            ) : (
+              <Box sx={{ px: 2, py: 1 }}>
+                <Button
+                  component={Link}
+                  to="/login"
+                  variant="contained"
+                  size="large"
+                  className="hover-scale"
+                  sx={{
+                    background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 20px rgba(37, 99, 235, 0.3)',
                       background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))',
                     },
                     transition: 'all 0.3s ease',
@@ -412,394 +744,72 @@ const Navbar = () => {
                 >
                   Book Now
                 </Button>
-              )}
-
-              {/* Mobile menu button */}
-              <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
-                <IconButton
-                  size="large"
-                  aria-label="menu"
-                  onClick={handleDrawerToggle}
-                  sx={{
-                    color: 'text.primary',
-                    '&:hover': {
-                      color: 'primary.main',
-                      backgroundColor: 'rgba(37, 99, 235, 0.08)',
+              </Box>
+            )}
+          </List>
+          <Box sx={{ p: 2 }}>
+            <form onSubmit={handleSearch}>
+              <TextField
+                fullWidth
+                autoFocus
+                variant="outlined"
+                placeholder="Search destinations, tours, hotels..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon color="action" />
+                    </InputAdornment>
+                  ),
+                  endAdornment: searchTerm && (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        onClick={() => setSearchTerm('')}
+                        edge="end"
+                      >
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                  sx: {
+                    borderRadius: 'var(--radius-lg)',
+                    bgcolor: 'background.paper',
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'primary.main',
                     },
-                  }}
-                >
-                  <MenuIcon />
-                </IconButton>
-              </Box>
-            </Box>
-
-          </Toolbar>
-        </Container>
-
-        {/* Search Bar */}
-        {searchOpen && (
-          <Box 
-            sx={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              right: 0,
-              bgcolor: 'background.paper',
-              boxShadow: 2,
-              p: 2,
-              zIndex: 1200,
-              animation: 'slideDown 0.3s ease-out',
-              '@keyframes slideDown': {
-                from: { transform: 'translateY(-20px)', opacity: 0 },
-                to: { transform: 'translateY(0)', opacity: 1 },
-              },
-            }}
-          >
-            <Container>
-              <form onSubmit={handleSearch}>
-                <Box sx={{ position: 'relative', maxWidth: '800px', mx: 'auto' }}>
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    placeholder="Search destinations, tours, packages..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    autoFocus
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: '12px',
-                        bgcolor: 'background.paper',
-                        boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
-                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: 'primary.light',
-                        },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                          borderColor: 'primary.main',
-                          borderWidth: '1px',
-                        },
-                      },
-                      '& .MuiInputBase-input': {
-                        py: 1.5,
-                      },
-                    }}
-                    InputProps={{
-                      startAdornment: (
-                        <SearchIcon 
-                          sx={{ 
-                            color: 'text.secondary', 
-                            mr: 1,
-                            opacity: 0.7,
-                          }} 
-                        />
-                      ),
-                      endAdornment: searchTerm && (
-                        <IconButton
-                          onClick={() => setSearchTerm('')}
-                          size="small"
-                          sx={{ mr: 1 }}
-                        >
-                          <CloseIcon fontSize="small" />
-                        </IconButton>
-                      ),
-                    }}
-                  />
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    sx={{
-                      position: 'absolute',
-                      right: '4px',
-                      top: '4px',
-                      bottom: '4px',
-                      borderRadius: '8px',
-                      px: 3,
-                      fontWeight: 600,
-                      textTransform: 'none',
-                      background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))',
-                      },
-                    }}
-                  >
-                    Search
-                  </Button>
-                </Box>
-              </form>
-            </Container>
-          </Box>
-        )}
-      </StyledAppBar>
-
-      {/* Mobile Drawer */}
-      <Drawer
-        variant="temporary"
-        open={mobileOpen}
-        onClose={() => setMobileOpen(false)}
-        ModalProps={{ keepMounted: true }}
-        sx={{
-          display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': {
-            width: '85%',
-            maxWidth: '320px',
-            boxSizing: 'border-box',
-            borderTopRightRadius: '16px',
-            borderBottomRightRadius: '16px',
-            bgcolor: 'background.paper',
-            backgroundImage: 'none',
-            boxShadow: '4px 0 30px rgba(0, 0, 0, 0.1)',
-          },
-        }}
-      >
-        <Box 
-          sx={{ 
-            p: 3, 
-            bgcolor: 'primary.main',
-            color: 'white',
-            background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
-          }}
-        >
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Box 
-                sx={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: '10px',
-                  bgcolor: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'primary.main',
-                  fontWeight: 'bold',
-                  fontSize: '1rem',
-                }}
-              >
-                TM
-              </Box>
-              <Typography variant="h6" fontWeight={700}>
-                Travel Manasvi
-              </Typography>
-            </Box>
-            <IconButton 
-              onClick={() => setMobileOpen(false)}
-              sx={{ color: 'white' }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </Box>
-          
-          {/* Profile Section */}
-          {isLoggedIn && (
-            <Box sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 2, 
-              mb: 2, 
-              p: 2, 
-              bgcolor: 'rgba(255,255,255,0.1)', 
-              borderRadius: '12px',
-              backdropFilter: 'blur(8px)'
-            }}>
-              <Avatar 
-                sx={{ 
-                  width: 48, 
-                  height: 48, 
-                  bgcolor: 'white',
-                  color: 'primary.main',
-                  fontWeight: 'bold',
-                  fontSize: '1rem',
-                }}
-              >
-                {initials}
-              </Avatar>
-              <Box>
-                <Typography variant="subtitle1" fontWeight={600}>
-                  {displayName}
-                </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  {userRole}
-                </Typography>
-              </Box>
-            </Box>
-          )}
-        </Box>
-
-        <List sx={{ p: 1 }}>
-          {navLinks.map((link) => (
-            <ListItem
-              key={link.text}
-              component={Link}
-              to={link.path}
-              onClick={() => setMobileOpen(false)}
-              sx={{
-                borderRadius: '8px',
-                mb: 0.5,
-                color: location.pathname === link.path ? 'primary.main' : 'text.primary',
-                backgroundColor: location.pathname === link.path ? 'rgba(37, 99, 235, 0.1)' : 'transparent',
-                '&:hover': {
-                  backgroundColor: 'action.hover',
-                  color: 'primary.main',
-                },
-              }}
-            >
-              <ListItemText 
-                primary={link.text} 
-                primaryTypographyProps={{
-                  fontWeight: location.pathname === link.path ? 600 : 400,
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'primary.main',
+                      borderWidth: '2px',
+                    },
+                  },
                 }}
               />
-            </ListItem>
-          ))}
-          
-          <Divider sx={{ my: 1 }} />
-          
-          {isLoggedIn ? (
-            <>
-              <ListItem 
-                button 
-                onClick={() => {
-                  handleDashboard();
-                  setMobileOpen(false);
-                }}
-                sx={{
-                  borderRadius: '8px',
-                  mb: 0.5,
-                  '&:hover': {
-                    color: 'primary.main',
-                    backgroundColor: 'action.hover',
-                  },
-                }}
-              >
-                <ListItemText primary="Dashboard" />
-              </ListItem>
-              <ListItem 
-                button 
-                onClick={() => {
-                  handleMyProfile();
-                  setMobileOpen(false);
-                }}
-                sx={{
-                  borderRadius: '8px',
-                  mb: 0.5,
-                  '&:hover': {
-                    color: 'primary.main',
-                    backgroundColor: 'action.hover',
-                  },
-                }}
-              >
-                <ListItemText primary="My Profile" />
-              </ListItem>
-              <ListItem 
-                button 
-                onClick={() => {
-                  handleLogout();
-                  setMobileOpen(false);
-                }}
-                sx={{
-                  color: 'error.main',
-                  borderRadius: '8px',
-                  '&:hover': {
-                    backgroundColor: 'rgba(244, 67, 54, 0.08)',
-                  },
-                }}
-              >
-                <ListItemText primary="Logout" />
-              </ListItem>
-            </>
-          ) : (
-            <Box sx={{ px: 2, py: 1 }}>
               <Button
-                component={Link}
-                to="/login"
+                type="submit"
                 variant="contained"
-                size="large"
-                className="hover-scale"
                 sx={{
+                  position: 'absolute',
+                  right: '4px',
+                  top: '4px',
+                  bottom: '4px',
+                  borderRadius: '8px',
+                  px: 3,
+                  fontWeight: 600,
+                  textTransform: 'none',
                   background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
                   '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 6px 20px rgba(37, 99, 235, 0.3)',
                     background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))',
                   },
-                  transition: 'all 0.3s ease',
                 }}
               >
-                Book Now
+                Search
               </Button>
-            </Box>
-          )}
-        </List>
-        <div className="px-4 pb-4">
-          <form onSubmit={handleSearch}>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Search destinations, tours..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              sx={{
-                backgroundColor: 'white',
-                borderRadius: '8px',
-                '& .MuiOutlinedInput-root': {
-                  '& fieldset': {
-                    borderColor: 'var(--border)',
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.light',
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.main',
-                    borderWidth: '1px',
-                  },
-                },
-                '& .MuiInputBase-input': {
-                  py: 1.5,
-                },
-              }}
-              InputProps={{
-                startAdornment: (
-                  <SearchIcon 
-                    sx={{ 
-                      color: 'text.secondary', 
-                      mr: 1,
-                      opacity: 0.7,
-                    }} 
-                  />
-                ),
-                endAdornment: searchTerm && (
-                  <IconButton
-                    onClick={() => setSearchTerm('')}
-                    size="small"
-                    sx={{ mr: 1 }}
-                  >
-                    <CloseIcon fontSize="small" />
-                  </IconButton>
-                ),
-              }}
-            />
-            <Button
-              type="submit"
-              variant="contained"
-              sx={{
-                position: 'absolute',
-                right: '4px',
-                top: '4px',
-                bottom: '4px',
-                borderRadius: '8px',
-                px: 3,
-                fontWeight: 600,
-                textTransform: 'none',
-                background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))',
-                },
-              }}
-            >
-              Search
-            </Button>
-          </form>
-        </div>
-      </Drawer>
+            </form>
+          </Box>
+        </Drawer>
+      </StyledAppBar>
     </>
   );
 };

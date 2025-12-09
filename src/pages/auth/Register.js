@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { TextField, Button, Box, Alert, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { Person, Email, Lock } from '@mui/icons-material';
+import { createUser, getUserByEmail } from '../../services/userService';
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -62,14 +63,18 @@ const Register = () => {
     setIsLoading(true);
     setRegisterError('');
     
-    // Simulate API call
     try {
-      // In a real app, you would register the user here
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // For demo purposes, we'll just navigate to home
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const existing = await getUserByEmail(email);
+      if (existing) {
+        setRegisterError('An account with this email already exists');
+        return;
+      }
+
+      const created = await createUser({ name, email, password, role: 'customer' });
       console.log('Registration attempt with:', { name, email, password, confirmPassword });
-      navigate('/');
+      navigate('/login', { state: { registeredEmail: created.email } });
     } catch (error) {
       setRegisterError('Registration failed. Please try again.');
     } finally {

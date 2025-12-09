@@ -16,6 +16,7 @@ import InsightsIcon from '@mui/icons-material/Insights';
 import InventoryIcon from '@mui/icons-material/Inventory2';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const collapsedWidth = 72;
 const expandedWidth = 260;
@@ -23,6 +24,7 @@ const expandedWidth = 260;
 export default function AdminSidebar({ onLogout }) {
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
+  const { logout } = useAuth();
 
   const items = [
     { to: '/admin-dashboard', icon: <DashboardIcon />, label: 'Overview' },
@@ -33,9 +35,7 @@ export default function AdminSidebar({ onLogout }) {
   ];
 
   const handleLogout = () => {
-    try {
-      localStorage.removeItem('tm_user');
-    } catch {}
+    logout();
     if (onLogout) onLogout();
     navigate('/login');
   };
