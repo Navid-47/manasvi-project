@@ -199,7 +199,7 @@ const Home = () => {
       />
 
       {/* Search Section - Overlay on Hero */}
-      <section className="relative z-10 -mt-40 mb-20">
+      <section className="relative z-10 -mt-60 mb-20">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto rounded-xl shadow-2xl overflow-hidden bg-white bg-opacity-95 backdrop-blur-sm">
             <div className="p-6">
