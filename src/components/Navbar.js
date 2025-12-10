@@ -1,14 +1,102 @@
-import React, { useState, useEffect } from 'react';
-
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { AppBar, Toolbar, IconButton, Drawer, List, ListItem, ListItemText, TextField, Avatar, Menu, MenuItem, Divider, Tooltip, Box, Typography } from '@mui/material';
+import { 
+  AppBar, 
+  Toolbar, 
+  IconButton, 
+  Drawer, 
+  List, 
+  ListItem, 
+  ListItemText, 
+  ListItemIcon,
+  TextField, 
+  Avatar, 
+  Menu, 
+  MenuItem, 
+  Divider, 
+  Tooltip, 
+  Box, 
+  Typography,
+  Container,
+  Button,
+  InputAdornment,
+  styled
+} from '@mui/material';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import PersonIcon from '@mui/icons-material/Person';
+import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
-import NotificationBell from './NotificationBell';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import NotificationBell from './NotificationBell';
 import { useAuth } from '../context/AuthContext';
 import { getNotificationsForUser, markAllAsReadForUser } from '../services/notificationService';
+
+// Styled Components
+const StyledAppBar = styled(AppBar, {
+  shouldForwardProp: (prop) => prop !== 'scrolled',
+})(({ theme, scrolled }) => ({
+  backgroundColor: scrolled ? 'var(--surface-elevated)' : 'var(--white)',
+  backdropFilter: 'blur(12px)',
+  WebkitBackdropFilter: 'blur(12px)',
+  transition: 'var(--transition)',
+  boxShadow: scrolled ? 'var(--shadow-md)' : 'none',
+  borderBottom: scrolled ? '1px solid var(--border)' : '1px solid transparent',
+  padding: scrolled ? '0.5rem 0' : '1rem 0',
+  color: 'var(--text)',
+  
+  '& .MuiButton-contained': {
+    background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+    color: 'var(--white)',
+    textTransform: 'none',
+    fontWeight: 600,
+    padding: '0.5rem 1.5rem',
+    borderRadius: 'var(--radius-md)',
+    boxShadow: 'var(--shadow-sm)',
+    transition: 'var(--transition)',
+    '&:hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: 'var(--shadow-md)',
+    },
+  },
+  
+  '& .MuiIconButton-root': {
+    color: 'var(--text)',
+    '&:hover': {
+      backgroundColor: 'var(--gray-100)',
+    },
+  },
+}));
+
+const NavLink = styled(Link, {
+  shouldForwardProp: (prop) => prop !== 'active',
+})(({ theme, active }) => ({
+  color: active ? 'var(--primary)' : 'var(--text)',
+  textDecoration: 'none',
+  fontWeight: 500,
+  padding: '0.5rem 1rem',
+  borderRadius: 'var(--radius)',
+  transition: 'var(--transition)',
+  position: 'relative',
+  '&:hover': {
+    color: 'var(--primary-dark)',
+    '&::after': {
+      width: '100%',
+      left: 0,
+    },
+  },
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    width: active ? '100%' : '0',
+    height: '2px',
+    bottom: '0',
+    left: active ? '0' : '50%',
+    backgroundColor: 'var(--primary)',
+    transition: 'all 0.3s ease',
+  },
+}));
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -19,44 +107,38 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const handleScroll = () => {
-    if (window.scrollY > 10) {
-      setIsScrolled(true);
-    } else {
-      setIsScrolled(false);
-    }
-  };
+  // Sample notifications
+  const sampleNotifications = [
+    { id: 1, title: 'Your booking was confirmed', time: '2h ago', read: false },
+    { id: 2, title: 'Payment received', time: 'Yesterday', read: true },
+  ];
 
+  // Navigation links
+  const navLinks = [
+    { text: 'Home', path: '/' },
+    { text: 'Destinations', path: '/destinations' },
+    { text: 'Tours', path: '/tours' },
+    { text: 'About', path: '/about' },
+    { text: 'Contact', path: '/contact' }
+  ];
+
+  // Handle scroll effect
   useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
+    const handleScroll = () => {
+      const offset = window.scrollY;
+      setIsScrolled(offset > 10);
     };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const [notifications, setNotifications] = useState([]);
-
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
-
-  const handleSearchToggle = () => {
-    setSearchOpen(!searchOpen);
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    console.log('Searching for:', searchTerm);
-    setSearchOpen(false);
-    setSearchTerm('');
-  };
-
-  // Check if user is logged in
+  const [notifications, setNotifications] = useState(sampleNotifications);
   const { user, isAuthenticated, logout } = useAuth();
 
-  const isLoggedIn = !!isAuthenticated;
+  // Load notifications
   useEffect(() => {
-    if (!isLoggedIn || !user) {
+    if (!isAuthenticated || !user) {
       setNotifications([]);
       return;
     }
@@ -64,8 +146,8 @@ const Navbar = () => {
     const refresh = () => {
       try {
         setNotifications(getNotificationsForUser(user));
-      } catch {
-        // ignore
+      } catch (error) {
+        console.error('Error loading notifications:', error);
       }
     };
 
@@ -79,25 +161,65 @@ const Navbar = () => {
         window.removeEventListener('tm_notifications_updated', refresh);
       }
     };
-  }, [isLoggedIn, user]);
+  }, [isAuthenticated, user]);
 
-  const displayName = user?.userName || (user?.email ? user.email.split('@')[0] : 'User');
-  const initials = displayName
-    .split('.')
-    .join(' ')
-    .split(/\s+/)
-    .map((s) => s[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
 
-  const openMenu = Boolean(anchorEl);
-  const handleMenuOpen = (e) => setAnchorEl(e.currentTarget);
-  const handleMenuClose = () => setAnchorEl(null);
+  // Toggle search bar
+  const handleSearchToggle = () => {
+    setSearchOpen(!searchOpen);
+    if (!searchOpen) {
+      setSearchTerm('');
+    }
+  };
 
+  // Handle search form submission
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
+      setSearchTerm('');
+      setSearchOpen(false);
+    }
+  };
+
+  // Handle menu open/close
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      handleMenuClose();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
+  const handleReadAllNotifications = async () => {
+    if (!user) return;
+    try {
+      await markAllAsReadForUser(user.id);
+      setNotifications(prev => 
+        prev.map(n => ({ ...n, read: true }))
+      );
+    } catch (error) {
+      console.error('Failed to mark notifications as read:', error);
+    }
+  };
+
+  // Navigation handlers
   const handleDashboard = () => {
     handleMenuClose();
-    navigate('/user-dashboard');
+    navigate('/user-dashboard');  
   };
 
   const handleMyProfile = () => {
@@ -105,341 +227,589 @@ const Navbar = () => {
     navigate('/user-dashboard/profile');
   };
 
-  const handleLogout = () => {
-    handleMenuClose();
-    logout();
-    navigate('/login', { replace: true, state: { loggedOut: true } });
-  };
-
-  const navLinks = [
-    { text: 'Home', path: '/' },
-    { text: 'Destinations', path: '/destinations' },
-    { text: 'Tours', path: '/tours' },
-    { text: 'About', path: '/about' },
-    { text: 'Contact', path: '/contact' }
-  ];
-
-  const handleReadAllNotifications = () => {
-    if (!user) return;
+  // User data and authentication state
+  const stored = useMemo(() => {
     try {
-      markAllAsReadForUser(user);
-    } catch {
-      // ignore
+      return JSON.parse(localStorage.getItem('tm_user')) || null;
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      return null;
     }
-  };
+  }, []);
+
+  const isLoggedIn = isAuthenticated || !!stored;
+  const displayName = user?.displayName || stored?.userName || 'User';
+  const userEmail = user?.email || stored?.email || '';
+  const userRole = user?.role || stored?.role || 'Customer';
+  
+  // Generate user initials for avatar
+  const initials = useMemo(() => {
+    return displayName
+      .split('.')
+      .join(' ')
+      .split(/\s+/)
+      .map((s) => s[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
+  }, [displayName]);
+
+  const openMenu = Boolean(anchorEl);
 
   return (
     <>
-      <AppBar
-        position="sticky"
-        className={`shadow-md transition-all duration-300 ${isScrolled ? 'bg-white' : 'bg-white/90'}`}
-        sx={{
-          backgroundColor: isScrolled ? '#fff' : 'rgba(255, 255, 255, 0.9)',
-          boxShadow: isScrolled ? '0 2px 10px rgba(0,0,0,0.1)' : 'none',
-          backdropFilter: isScrolled ? 'none' : 'blur(10px)'
-        }}
+      <StyledAppBar 
+        position="fixed" 
+        scrolled={isScrolled}
+        elevation={0}
       >
-        <Toolbar className="flex justify-between items-center py-4 px-4 md:px-8">
-          <div className="flex items-center animate-fade-in">
-            <Link to="/" className="flex items-center gap-3 no-underline">
-              <img
-                src="/images/logo.jpg"
-                alt="Travel Manasvi"
-                className="h-10 w-auto rounded-md object-cover"
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = '/favicon.ico';
-                }}
-              />
-              <span className="text-text text-xl font-bold hover:text-brand transition-colors duration-300">
-                Travel Manasvi
-              </span>
-            </Link>
-          </div>
-
-          <div className="hidden md:flex items-center space-x-6">
-            {navLinks.map((link, index) => (
-              <Link
-                key={link.text}
-                to={link.path}
-                className={`${
-                  location.pathname === link.path ? 'text-brand font-bold' : 'text-text hover:text-brand'
-                } transition-all duration-300 font-medium transform hover:scale-105 hover:-translate-y-0.5 no-underline`}
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                {link.text}
-              </Link>
-            ))}
-            <IconButton
-              onClick={handleSearchToggle}
-              className="text-text hover:text-brand transition-all duration-300 transform hover:scale-110"
-            >
-              <SearchIcon />
-            </IconButton>
-            {isLoggedIn && (
-              <NotificationBell
-                notifications={notifications}
-                onReadAll={handleReadAllNotifications}
-              />
-            )}
-
-            {/* Show Profile Menu if logged in, otherwise show Book Now */}
-            {isLoggedIn ? (
-              <Box className="flex items-center gap-2">
-                <Tooltip title={displayName}>
-                  <IconButton
-                    onClick={handleMenuOpen}
-                    size="small"
-                    className="hover-scale"
-                  >
-                    <Avatar sx={{ width: 36, height: 36, bgcolor: 'var(--brand)' }}>
-                      {initials}
-                    </Avatar>
-                  </IconButton>
-                </Tooltip>
-                <IconButton
-                  onClick={handleMenuOpen}
-                  className="text-text hover:text-brand transition-all duration-300"
-                  size="small"
-                >
-                  <ArrowDropDownIcon />
-                </IconButton>
-                <Menu
-                  anchorEl={anchorEl}
-                  open={openMenu}
-                  onClose={handleMenuClose}
-                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-                >
-                  <Box px={2} py={1}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                      {displayName}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Customer Dashboard
-                    </Typography>
-                  </Box>
-                  <Divider />
-                  <MenuItem onClick={handleDashboard}>Dashboard</MenuItem>
-                  <MenuItem onClick={handleMyProfile}>My Profile</MenuItem>
-                  <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
-                    Logout
-                  </MenuItem>
-                </Menu>
-              </Box>
-            ) : (
-              <Link 
-                to="/login" 
-                className="bg-brand text-white px-6 py-2 rounded-lg hover:bg-brand-dark transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5 shadow-md hover:shadow-lg no-underline"
-              >
-                Book Now
-              </Link>
-            )}
-          </div>
-
-          <div className="flex items-center md:hidden">
-            <IconButton
-              onClick={handleSearchToggle}
-              className="text-text hover:text-brand transition-all duration-300 transform hover:scale-110"
-            >
-              <SearchIcon />
-            </IconButton>
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              edge="start"
-              onClick={handleDrawerToggle}
-              className="text-text transition-all duration-300 transform hover:scale-110"
-            >
-              <MenuIcon />
-            </IconButton>
-          </div>
-        </Toolbar>
-
-        {searchOpen && (
-          <div className="px-4 pb-4 md:px-8 animate-slide-in-down">
-            <form onSubmit={handleSearch}>
-              <div className="relative">
-                <TextField
-                  fullWidth
-                  variant="outlined"
-                  placeholder="Search destinations, tours, etc..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  autoFocus
+        <Container maxWidth="xl">
+          <Toolbar disableGutters sx={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
+            {/* Logo */}
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+                <Box 
                   sx={{
-                    backgroundColor: 'white',
-                    borderRadius: '8px',
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': {
-                        borderColor: 'var(--border)',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: 'var(--brand)',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: 'var(--brand)',
+                    width: 40,
+                    height: 40,
+                    borderRadius: '12px',
+                    background: 'linear-gradient(135deg, var(--primary), var(--accent))',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    fontSize: '1.25rem',
+                    boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'rotate(10deg) scale(1.1)',
+                    }
+                  }}
+                >
+                  TM
+                </Box>
+                <Typography 
+                  variant="h6" 
+                  noWrap 
+                  component="div" 
+                  sx={{
+                    ml: 2,
+                    fontWeight: 700,
+                    background: 'linear-gradient(90deg, var(--primary), var(--accent))',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    display: { xs: 'none', md: 'block' },
+                  }}
+                >
+                  Travel Manasvi
+                </Typography>
+              </Link>
+            </Box>
+
+            {/* Desktop Navigation */}
+            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, justifyContent: 'center' }}>
+              {navLinks.map((link) => (
+                <NavLink
+                  key={link.text}
+                  to={link.path}
+                  active={location.pathname === link.path ? 1 : 0}
+                  className="nav-link"
+                  sx={{
+                    mx: 1,
+                    '&.active': {
+                      color: 'primary.main',
+                      '&::after': {
+                        width: '100%',
+                        left: 0,
                       },
                     },
                   }}
+                >
+                  {link.text}
+                </NavLink>
+              ))}
+            </Box>
+
+            {/* Right side actions */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <IconButton
+                onClick={handleSearchToggle}
+                sx={{
+                  color: 'text.primary',
+                  '&:hover': {
+                    color: 'primary.main',
+                    transform: 'scale(1.1)',
+                  },
+                  transition: 'all 0.2s ease-in-out',
+                }}
+              >
+                <SearchIcon />
+              </IconButton>
+              
+              {isLoggedIn && (
+                <NotificationBell
+                  notifications={notifications}
+                  onReadAll={handleReadAllNotifications}
+                />
+              )}
+
+              {isLoggedIn ? (
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Tooltip title={displayName}>
+                    <IconButton
+                      onClick={handleMenuOpen}
+                      size="small"
+                      sx={{
+                        p: 0,
+                        '&:hover': {
+                          transform: 'scale(1.05)',
+                        },
+                        transition: 'all 0.2s ease-in-out',
+                      }}
+                    >
+                      <Avatar 
+                        sx={{ 
+                          width: 36, 
+                          height: 36, 
+                          bgcolor: 'primary.main',
+                          fontWeight: 'bold',
+                          '&:hover': {
+                            transform: 'scale(1.05)',
+                            boxShadow: '0 0 0 2px rgba(37, 99, 235, 0.2)',
+                          },
+                        }}
+                      >
+                        {initials}
+                      </Avatar>
+                    </IconButton>
+                  </Tooltip>
+                  <IconButton
+                    onClick={handleMenuOpen}
+                    size="small"
+                    sx={{ ml: -0.5 }}
+                  >
+                    <ArrowDropDownIcon />
+                  </IconButton>
+                  <Menu
+                    anchorEl={anchorEl}
+                    open={openMenu}
+                    onClose={handleMenuClose}
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                    transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  >
+                    <Box px={2} py={1}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                        {displayName}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {userRole} Dashboard
+                      </Typography>
+                    </Box>
+                    <Divider />
+                    <MenuItem onClick={handleDashboard}>
+                      <ListItemIcon>
+                        <DashboardIcon fontSize="small" />
+                      </ListItemIcon>
+                      Dashboard
+                    </MenuItem>
+                    <MenuItem onClick={handleMyProfile}>
+                      <ListItemIcon>
+                        <PersonIcon fontSize="small" />
+                      </ListItemIcon>
+                      My Profile
+                    </MenuItem>
+                    <Divider />
+                    <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
+                      <ListItemIcon sx={{ color: 'error.main' }}>
+                        <LogoutIcon fontSize="small" />
+                      </ListItemIcon>
+                      Logout
+                    </MenuItem>
+                  </Menu>
+                </Box>
+              ) : (
+                <Button
+                  component={Link}
+                  to="/login"
+                  variant="contained"
+                  color="primary"
+                  sx={{
+                    ml: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    px: 3,
+                    py: 1,
+                    borderRadius: 'var(--radius-md)',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: 'var(--shadow-md)',
+                    },
+                  }}
+                >
+                  Sign In
+                </Button>
+              )}
+
+              {/* Mobile menu button */}
+              <IconButton
+                color="inherit"
+                aria-label="open drawer"
+                edge="start"
+                onClick={handleDrawerToggle}
+                sx={{ display: { md: 'none' }, ml: 1 }}
+              >
+                <MenuIcon />
+              </IconButton>
+            </Box>
+          </Toolbar>
+        </Container>
+
+        {/* Search Drawer */}
+        <Drawer
+          anchor="top"
+          open={searchOpen}
+          onClose={handleSearchToggle}
+          PaperProps={{
+            sx: {
+              marginTop: '64px',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              bgcolor: 'background.paper',
+              p: 2,
+            },
+          }}
+          sx={{
+            '& .MuiBackdrop-root': {
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              backdropFilter: 'blur(4px)',
+            },
+          }}
+        >
+          <Container>
+            <form onSubmit={handleSearch}>
+              <Box sx={{ position: 'relative', maxWidth: '800px', mx: 'auto' }}>
+                <TextField
+                  fullWidth
+                  autoFocus
+                  variant="outlined"
+                  placeholder="Search destinations, tours, hotels..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   InputProps={{
-                    endAdornment: (
-                      <div className="flex items-center space-x-1">
-                        <IconButton
-                          onClick={handleSearchToggle}
-                          className="text-text-muted hover:text-text hover-scale"
-                          aria-label="Close search"
-                        >
-                          <CloseIcon />
-                        </IconButton>
-                        <IconButton type="submit" className="text-brand hover-scale" aria-label="Search">
-                          <SearchIcon />
-                        </IconButton>
-                      </div>
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon color="action" />
+                      </InputAdornment>
                     ),
+                    endAdornment: searchTerm && (
+                      <InputAdornment position="end">
+                        <IconButton
+                          size="small"
+                          onClick={() => setSearchTerm('')}
+                          edge="end"
+                        >
+                          <CloseIcon fontSize="small" />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                    sx: {
+                      borderRadius: 'var(--radius-lg)',
+                      bgcolor: 'background.paper',
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'primary.main',
+                      },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'primary.main',
+                        borderWidth: '2px',
+                      },
+                    },
                   }}
                 />
-              </div>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  sx={{
+                    position: 'absolute',
+                    right: '4px',
+                    top: '4px',
+                    bottom: '4px',
+                    borderRadius: '8px',
+                    px: 3,
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))',
+                    },
+                  }}
+                >
+                  Search
+                </Button>
+              </Box>
             </form>
-          </div>
-        )}
-      </AppBar>
+          </Container>
+        </Drawer>
 
-      <Drawer
-        variant="temporary"
-        open={mobileOpen}
-        onClose={handleDrawerToggle}
-        ModalProps={{ keepMounted: true }}
-        className="md:hidden"
-        PaperProps={{ sx: { width: '80%', maxWidth: '300px' } }}
-      >
-        <div className="p-4 bg-brand text-white">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-2">
-              <img
-                src="/images/logo.jpg"
-                alt="Travel Manasvi"
-                className="h-8 w-auto rounded object-cover"
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = '/favicon.ico';
-                }}
-              />
-              <span className="text-xl font-bold">Travel Manasvi</span>
-            </div>
-            <IconButton onClick={handleDrawerToggle} className="text-white hover-scale">
-              <CloseIcon />
-            </IconButton>
-          </div>
-          
-          {/* Profile Inline if logged in */}
-          {isLoggedIn && (
-            <div className="flex items-center gap-3">
-              <Avatar sx={{ bgcolor: '#fff', color: 'var(--brand)' }}>{initials}</Avatar>
-              <div>
-                <div className="font-semibold">{displayName}</div>
-                <div className="text-white/80 text-sm">Customer</div>
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Mobile Drawer */}
+        <Drawer
+          variant="temporary"
+          anchor="right"
+          open={mobileOpen}
+          onClose={handleDrawerToggle}
+          ModalProps={{
+            keepMounted: true, // Better open performance on mobile.
+          }}
+          sx={{
+            display: { xs: 'block', md: 'none' },
+            '& .MuiDrawer-paper': { 
+              boxSizing: 'border-box', 
+              width: 280,
+              bgcolor: 'background.paper',
+            },
+          }}
+        >
+          <Box 
+            sx={{ 
+              p: 3, 
+              bgcolor: 'primary.main',
+              color: 'white',
+              background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+            }}
+          >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Box 
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: '10px',
+                    bgcolor: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'primary.main',
+                    fontWeight: 'bold',
+                    fontSize: '1rem',
+                  }}
+                >
+                  TM
+                </Box>
+                <Typography variant="h6" fontWeight={700}>
+                  Travel Manasvi
+                </Typography>
+              </Box>
+              <IconButton 
+                onClick={() => setMobileOpen(false)}
+                sx={{ color: 'white' }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </Box>
+            
+            {/* Profile Section */}
+            {isLoggedIn && (
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 2, 
+                mb: 2, 
+                p: 2, 
+                bgcolor: 'rgba(255,255,255,0.1)', 
+                borderRadius: '12px',
+                backdropFilter: 'blur(8px)'
+              }}>
+                <Avatar 
+                  sx={{ 
+                    width: 48, 
+                    height: 48, 
+                    bgcolor: 'white',
+                    color: 'primary.main',
+                    fontWeight: 'bold',
+                    fontSize: '1rem',
+                  }}
+                >
+                  {initials}
+                </Avatar>
+                <Box>
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    {displayName}
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    {userRole}
+                  </Typography>
+                </Box>
+              </Box>
+            )}
+          </Box>
 
-        <List>
-          {navLinks.map((link) => (
-            <ListItem
-              button
-              key={link.text}
-              component={Link}
-              to={link.path}
-              onClick={handleDrawerToggle}
-              className={`${
-                location.pathname === link.path ? 'bg-brand/10' : ''
-              } transition-all duration-300 transform hover:scale-105 hover:bg-brand/20 rounded-lg my-1`}
-            >
-              <ListItemText
-                primary={link.text}
-                className={location.pathname === link.path ? 'text-brand font-bold' : 'text-text'}
-              />
-            </ListItem>
-          ))}
-          
-          <Divider sx={{ my: 1 }} />
-          
-          {/* Show profile options if logged in, otherwise show Book Now */}
-          {isLoggedIn ? (
-            <>
+          <List sx={{ p: 1 }}>
+            {navLinks.map((link) => (
               <ListItem
-                button
-                onClick={() => {
-                  handleDrawerToggle();
-                  navigate('/user-dashboard');
-                }}
-                className="mx-2 rounded transition-all duration-300 transform hover:scale-105 hover:bg-brand/10"
-              >
-                <ListItemText primary="Dashboard" />
-              </ListItem>
-              <ListItem
-                button
-                onClick={() => {
-                  handleDrawerToggle();
-                  navigate('/user-dashboard/profile');
-                }}
-                className="mx-2 rounded transition-all duration-300 transform hover:scale-105 hover:bg-brand/10"
-              >
-                <ListItemText primary="My Profile" />
-              </ListItem>
-              <ListItem
-                button
-                onClick={() => {
-                  handleDrawerToggle();
-                  handleLogout();
-                }}
-                className="mx-2 rounded transition-all duration-300 transform hover:scale-105 hover:bg-brand/10"
-              >
-                <ListItemText primary="Logout" />
-              </ListItem>
-            </>
-          ) : (
-            <ListItem 
-              button 
-              component={Link}
-              to="/login"
-              onClick={handleDrawerToggle}
-              className="bg-brand text-white mx-4 mt-4 rounded transition-all duration-300 transform hover:scale-105 hover:bg-brand-dark hover:-translate-y-0.5 shadow-md hover:shadow-lg"
-            >
-              <ListItemText primary="Book Now" />
-            </ListItem>
-          )}
-        </List>
-
-        <div className="p-4">
-          <form onSubmit={handleSearch} className="relative">
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              sx={{
-                backgroundColor: 'white',
-                borderRadius: '8px',
-                '& .MuiOutlinedInput-root': {
-                  '& fieldset': {
-                    borderColor: 'var(--border)',
+                key={link.text}
+                component={Link}
+                to={link.path}
+                onClick={() => setMobileOpen(false)}
+                sx={{
+                  borderRadius: '8px',
+                  mb: 0.5,
+                  color: location.pathname === link.path ? 'primary.main' : 'text.primary',
+                  backgroundColor: location.pathname === link.path ? 'rgba(37, 99, 235, 0.1)' : 'transparent',
+                  '&:hover': {
+                    backgroundColor: 'action.hover',
+                    color: 'primary.main',
                   },
-                },
-              }}
-              InputProps={{
-                endAdornment: (
-                  <IconButton type="submit" className="text-brand hover-scale">
-                    <SearchIcon />
-                  </IconButton>
-                ),
-              }}
-            />
-          </form>
-        </div>
-      </Drawer>
+                }}
+              >
+                <ListItemText 
+                  primary={link.text} 
+                  primaryTypographyProps={{
+                    fontWeight: location.pathname === link.path ? 600 : 400,
+                  }}
+                />
+              </ListItem>
+            ))}
+            
+            <Divider sx={{ my: 1 }} />
+            
+            {isLoggedIn ? (
+              <>
+                <ListItem 
+                  button 
+                  onClick={() => {
+                    handleDashboard();
+                    setMobileOpen(false);
+                  }}
+                  sx={{
+                    borderRadius: '8px',
+                    mb: 0.5,
+                    '&:hover': {
+                      color: 'primary.main',
+                      backgroundColor: 'action.hover',
+                    },
+                  }}
+                >
+                  <ListItemText primary="Dashboard" />
+                </ListItem>
+                <ListItem 
+                  button 
+                  onClick={() => {
+                    handleMyProfile();
+                    setMobileOpen(false);
+                  }}
+                  sx={{
+                    borderRadius: '8px',
+                    mb: 0.5,
+                    '&:hover': {
+                      color: 'primary.main',
+                      backgroundColor: 'action.hover',
+                    },
+                  }}
+                >
+                  <ListItemText primary="My Profile" />
+                </ListItem>
+                <ListItem 
+                  button 
+                  onClick={() => {
+                    handleLogout();
+                    setMobileOpen(false);
+                  }}
+                  sx={{
+                    color: 'error.main',
+                    borderRadius: '8px',
+                    '&:hover': {
+                      backgroundColor: 'rgba(244, 67, 54, 0.08)',
+                    },
+                  }}
+                >
+                  <ListItemText primary="Logout" />
+                </ListItem>
+              </>
+            ) : (
+              <Box sx={{ px: 2, py: 1 }}>
+                <Button
+                  component={Link}
+                  to="/login"
+                  variant="contained"
+                  size="large"
+                  className="hover-scale"
+                  sx={{
+                    background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 20px rgba(37, 99, 235, 0.3)',
+                      background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))',
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  Book Now
+                </Button>
+              </Box>
+            )}
+          </List>
+          <Box sx={{ p: 2 }}>
+            <form onSubmit={handleSearch}>
+              <TextField
+                fullWidth
+                autoFocus
+                variant="outlined"
+                placeholder="Search destinations, tours, hotels..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon color="action" />
+                    </InputAdornment>
+                  ),
+                  endAdornment: searchTerm && (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        onClick={() => setSearchTerm('')}
+                        edge="end"
+                      >
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                  sx: {
+                    borderRadius: 'var(--radius-lg)',
+                    bgcolor: 'background.paper',
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'primary.main',
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'primary.main',
+                      borderWidth: '2px',
+                    },
+                  },
+                }}
+              />
+              <Button
+                type="submit"
+                variant="contained"
+                sx={{
+                  position: 'absolute',
+                  right: '4px',
+                  top: '4px',
+                  bottom: '4px',
+                  borderRadius: '8px',
+                  px: 3,
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))',
+                  },
+                }}
+              >
+                Search
+              </Button>
+            </form>
+          </Box>
+        </Drawer>
+      </StyledAppBar>
     </>
   );
 };

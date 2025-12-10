@@ -29,8 +29,10 @@ const Destinations = () => {
     setCurrentPage(1);
   }, [searchParams]);
 
+  // Memoize the destinations data to prevent recreation on every render
+
   // Data: 26 famous tourism destinations (unique images per destination)
-  const allDestinations = [
+  const allDestinations = useMemo(() => [
     {
       id: 1,
       name: 'Swiss Alps',
@@ -130,7 +132,7 @@ const Destinations = () => {
         'https://images.unsplash.com/photo-1491884662610-dfcd28f30cf5?auto=format&fit=crop&w=1200&q=80', // Asakusa vibe
         'https://images.unsplash.com/photo-1498654896293-37aacf113fd9?auto=format&fit=crop&w=1200&q=80', // Tokyo night
         'https://images.unsplash.com/photo-1505063342033-7e7f28a1e1b2?auto=format&fit=crop&w=1200&q=80', // alley neon
-        'https://images.unsplash.com/photo-1498654200943-1088dd4438ae?auto=format&fit=crop&w=1200&q=80' // Skytree skyline
+        'https://images.unsplash.com/photo-1498654200943-322da13575f3?auto=format&fit=crop&w=1200&q=80' // Skytree skyline
       ],
       description: 'Neon vibes, ancient temples, and world-class cuisine.',
       price: 130000,
@@ -261,7 +263,7 @@ const Destinations = () => {
       image: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80',
       images: [
         'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=1200&q=80', // Big Ben
-        'https://images.unsplash.com/photo-1467810563316-b5476525c0f9?auto=format&fit=crop&w=1200&q=80', // Tower Bridge
+        'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80', // Tower Bridge
         'https://images.unsplash.com/photo-1464297162577-f5295c892194?auto=format&fit=crop&w=1200&q=80', // City skyline
         'https://images.unsplash.com/photo-1445251836269-d158eaa028a6?auto=format&fit=crop&w=1200&q=80', // Buckingham
         'https://images.unsplash.com/photo-1439120421136-bbbb0e6a9a7d?auto=format&fit=crop&w=1200&q=80' // London Eye/Thames
@@ -605,7 +607,7 @@ const Destinations = () => {
       bestTime: 'Mar to May, Sep to Nov',
       currency: 'USD'
     }
-  ];
+  ], []); // Added dependency array
 
   const categories = ['All', 'Mountain', 'Beach', 'City', 'Island', 'Nature', 'Cultural'];
 

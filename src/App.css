@@ -4,6 +4,13 @@
 .App {
   text-align: center;
   background: transparent;
+  padding-top: 80px; /* Add padding to prevent content from being hidden behind fixed navbar */
+}
+
+/* Ensure the main content has proper spacing */
+main {
+  min-height: calc(100vh - 200px); /* Adjust based on your footer height */
+  padding: 20px 0;
 }
 
 .App-logo {
