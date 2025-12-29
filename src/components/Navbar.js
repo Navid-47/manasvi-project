@@ -119,7 +119,8 @@ const Navbar = () => {
     { text: 'Destinations', path: '/destinations' },
     { text: 'Tours', path: '/tours' },
     { text: 'About', path: '/about' },
-    { text: 'Contact', path: '/contact' }
+    { text: 'Contact', path: '/contact' },
+    { text: 'Register', path: '/register' }
   ];
 
   // Handle scroll effect
@@ -239,7 +240,6 @@ const Navbar = () => {
 
   const isLoggedIn = isAuthenticated || !!stored;
   const displayName = user?.displayName || stored?.userName || 'User';
-  const userEmail = user?.email || stored?.email || '';
   const userRole = user?.role || stored?.role || 'Customer';
   
   // Generate user initials for avatar
