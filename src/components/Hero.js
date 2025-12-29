@@ -20,7 +20,7 @@ const HeroSection = styled(Box)(({ theme }) => ({
   justifyContent: 'flex-start',
   color: theme.palette.common.white,
   margin: 0,
-  padding: '80px 0 0', // Reduced top padding to move content higher
+  padding: '40px 0 0', // Further reduced top padding to move content higher
   background: theme.palette.primary.main, // Fallback background color
   '&::before': {
     content: '""',
@@ -52,7 +52,7 @@ const HeroSection = styled(Box)(({ theme }) => ({
 const HeroContent = styled(Box)(({ theme }) => ({
   position: 'relative',
   zIndex: 2,
-  padding: theme.spacing(4, 2, 2), // Reduced padding to move content up
+  padding: theme.spacing(2, 2, 2), // Further reduced padding to move content up
   textAlign: 'center',
   flex: 1,
   display: 'flex',
@@ -60,7 +60,7 @@ const HeroContent = styled(Box)(({ theme }) => ({
   justifyContent: 'flex-start',
   alignItems: 'center',
   maxWidth: '1000px',
-  margin: '0 auto',
+  margin: '5% auto 0', // Added top margin to bring content higher
   width: '90%',
   animation: 'fadeInUp 1s ease-out',
   '@keyframes fadeInUp': {
@@ -68,8 +68,8 @@ const HeroContent = styled(Box)(({ theme }) => ({
     '100%': { opacity: 1, transform: 'translateY(0)' },
   },
   [theme.breakpoints.up('md')]: {
-    padding: theme.spacing(4, 4, 2), // Reduced vertical padding
-    marginTop: '2%', // Reduced margin to move content higher
+    padding: theme.spacing(2, 4, 2), // Further reduced vertical padding
+    marginTop: '0', // Removed top margin to move content higher
   },
   '& h1': {
     fontSize: '3.5rem',

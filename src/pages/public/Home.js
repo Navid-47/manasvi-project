@@ -286,7 +286,13 @@ const Home = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {featuredDestinations.map((destination) => (
-              <div key={destination.id} className="bg-white rounded-xl overflow-hidden shadow-lg transition-all duration-300 hover-card">
+              <div key={destination.id} className="bg-white rounded-xl overflow-hidden shadow-lg transition-all duration-300 hover:shadow-xl" style={{
+                '--tw-bg-opacity': 1,
+                '&:hover': {
+                  backgroundColor: 'white !important',
+                  '--tw-bg-opacity': 1
+                }
+              }}>
                 <div className="relative">
                   <img
                     src={(() => {

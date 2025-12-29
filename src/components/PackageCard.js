@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardMedia, CardContent, CardActions, Typography, Button, Chip, Rating, Box } from '@mui/material';
+import { Card, CardMedia, CardContent, CardActions, Typography, Chip, Rating, Box } from '@mui/material';
 
 const PackageCard = ({ pkg, onBook }) => {
   const title = pkg?.name || pkg?.title || 'Travel Package';
@@ -11,7 +11,7 @@ const PackageCard = ({ pkg, onBook }) => {
   const inclusions = pkg?.inclusions ?? [];
 
   return (
-    <Card className="rounded-xl shadow-lg card-hover overflow-hidden">
+    <Card className="rounded-xl shadow-lg overflow-hidden" sx={{ '&:hover': { bgcolor: 'transparent' } }}>
       <CardMedia component="img" height="180" image={image} alt={title} />
       <CardContent>
         <div className="flex items-start justify-between mb-2">
@@ -41,21 +41,28 @@ const PackageCard = ({ pkg, onBook }) => {
         ) : null}
       </CardContent>
       <CardActions className="px-4 pb-4">
-        <Button
-          fullWidth
-          variant="contained"
+        <button 
           onClick={() => onBook?.(pkg)}
-          sx={{
+          style={{
+            width: '100%',
+            padding: '8px 16px',
             backgroundColor: 'var(--brand)',
-            textTransform: 'none',
-            fontWeight: 600,
+            color: 'white',
+            border: 'none',
             borderRadius: '10px',
-            '&:hover': { backgroundColor: 'var(--brand-dark)' },
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontSize: '0.875rem',
+            fontFamily: 'inherit',
+            transition: 'background-color 0.2s',
+            ':hover': {
+              backgroundColor: 'var(--brand)',
+              filter: 'brightness(0.9)'
+            }
           }}
-          className="transition-transform duration-150 hover:scale-105"
         >
           Book Now
-        </Button>
+        </button>
       </CardActions>
     </Card>
   );
