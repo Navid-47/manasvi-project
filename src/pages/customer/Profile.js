@@ -88,35 +88,76 @@ export default function Profile() {
 
   return (
     <Grow in timeout={300}>
-      <Box sx={{ maxWidth: 900, mx: 'auto', mt: 4 }}>
+      <Box sx={{ maxWidth: 1000, mx: 'auto', my: 4, px: { xs: 2, md: 3 } }}>
         {/* Header with Save button */}
         <Box
           display="flex"
+          flexDirection={{ xs: 'column', sm: 'row' }}
           justifyContent="space-between"
-          alignItems="center"
-          mb={2}
+          alignItems={{ xs: 'flex-start', sm: 'center' }}
+          mb={4}
+          gap={2}
         >
           <Stack direction="row" spacing={2} alignItems="center">
-            <Avatar sx={{ bgcolor: 'var(--brand)' }}>{initials}</Avatar>
+            <Avatar 
+              sx={{ 
+                bgcolor: 'var(--brand)', 
+                width: 56, 
+                height: 56,
+                fontSize: '1.5rem',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+              }}
+            >
+              {initials}
+            </Avatar>
             <Box>
-              <Typography variant="h5" sx={{ fontWeight: 700 }}>
+              <Typography variant="h4" sx={{ 
+                fontWeight: 700,
+                background: 'linear-gradient(45deg, var(--primary) 30%, var(--primary-dark) 90%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                mb: 0.5
+              }}>
                 My Profile
               </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Keep your details up to date for a smoother booking experience.
+              <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 500 }}>
+                Keep your details up to date for a smoother booking experience. Your information is secure and only used to enhance your travel experience.
               </Typography>
             </Box>
           </Stack>
 
           <Button
             variant="contained"
+            size="large"
+            disableElevation
             sx={{
-              backgroundColor: '#555',
+              background: 'linear-gradient(45deg, var(--primary) 0%, var(--primary-dark) 100%)',
               color: '#fff',
-              borderRadius: 1,
-              px: 3,
-              '&:hover': { backgroundColor: '#333' },
+              borderRadius: 2,
+              px: 4,
+              py: 1.5,
+              fontWeight: 600,
               textTransform: 'none',
+              boxShadow: '0 4px 14px 0 rgba(0, 118, 255, 0.2)',
+              '&:hover': {
+                transform: 'translateY(-1px)',
+                boxShadow: '0 6px 20px 0 rgba(0, 118, 255, 0.23)',
+                background: 'linear-gradient(45deg, var(--primary) 0%, var(--primary-dark) 100%) !important',
+              },
+              '&:active': {
+                transform: 'translateY(0)',
+                boxShadow: '0 4px 14px 0 rgba(0, 118, 255, 0.15)',
+                background: 'linear-gradient(45deg, var(--primary-dark) 0%, var(--primary-darker) 100%)',
+              },
+              '&.Mui-disabled': {
+                background: '#e0e0e0',
+                color: '#9e9e9e',
+                boxShadow: 'none',
+              },
+              transition: 'all 0.3s ease',
+              whiteSpace: 'nowrap',
+              width: { xs: '100%', sm: 'auto' },
+              mt: { xs: 2, sm: 0 }
             }}
             onClick={() => {
               const computedName = `${form.firstName || ''} ${form.lastName || ''}`.trim();
@@ -152,27 +193,54 @@ export default function Profile() {
               setSnack(true);
             }}
           >
-            Save
+            Save Changes
           </Button>
         </Box>
 
         <Paper
+          elevation={0}
           sx={{
-            p: 3,
-            borderRadius: 2,
-            boxShadow: 3,
+            p: { xs: 2, md: 4 },
+            borderRadius: 3,
+            background: '#fff',
+            boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.18)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
             animation: 'fadeIn 300ms ease',
             '@keyframes fadeIn': {
-              from: { opacity: 0, transform: 'translateY(6px)' },
+              from: { opacity: 0, transform: 'translateY(10px)' },
               to: { opacity: 1, transform: 'translateY(0)' },
             },
           }}
         >
           {/* General Information */}
-          <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>
-            General Information
-          </Typography>
-          <Grid container spacing={2}>
+          <Box sx={{ 
+            mb: 4,
+            pb: 2,
+            borderBottom: '1px solid rgba(0, 0, 0, 0.05)'
+          }}>
+            <Typography variant="h6" sx={{ 
+              fontWeight: 700, 
+              color: 'var(--text)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5
+            }}>
+              <Box component="span" sx={{ 
+                width: 6, 
+                height: 24, 
+                bgcolor: 'var(--brand)', 
+                borderRadius: '0 3px 3px 0',
+                display: 'inline-block'
+              }} />
+              General Information
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, pl: 2.5 }}>
+              Your basic profile information
+            </Typography>
+          </Box>
+          <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -180,6 +248,29 @@ export default function Profile() {
                 name="firstName"
                 value={form.firstName}
                 onChange={onChange}
+                variant="outlined"
+                size="small"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    '& fieldset': {
+                      borderColor: 'rgba(0, 0, 0, 0.1)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'var(--brand)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: 'var(--brand)',
+                      boxShadow: '0 0 0 3px rgba(0, 118, 255, 0.1)'
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: 'text.secondary',
+                    '&.Mui-focused': {
+                      color: 'var(--brand)',
+                    },
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -189,6 +280,29 @@ export default function Profile() {
                 name="lastName"
                 value={form.lastName}
                 onChange={onChange}
+                variant="outlined"
+                size="small"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    '& fieldset': {
+                      borderColor: 'rgba(0, 0, 0, 0.1)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'var(--brand)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: 'var(--brand)',
+                      boxShadow: '0 0 0 3px rgba(0, 118, 255, 0.1)'
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: 'text.secondary',
+                    '&.Mui-focused': {
+                      color: 'var(--brand)',
+                    },
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={12} md={4}>
@@ -198,6 +312,53 @@ export default function Profile() {
                 label="Gender"
                 name="gender"
                 value={form.gender}
+                variant="outlined"
+                size="small"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    '& fieldset': {
+                      borderColor: 'rgba(0, 0, 0, 0.1)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'var(--brand)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: 'var(--brand)',
+                      boxShadow: '0 0 0 3px rgba(0, 118, 255, 0.1)'
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: 'text.secondary',
+                    '&.Mui-focused': {
+                      color: 'var(--brand)',
+                    },
+                  },
+                  '& .MuiSelect-select': {
+                    display: 'flex',
+                    alignItems: 'center',
+                  },
+                }}
+                SelectProps={{
+                  MenuProps: {
+                    PaperProps: {
+                      sx: {
+                        borderRadius: 2,
+                        mt: 1,
+                        boxShadow: '0 8px 24px 0 rgba(0,0,0,0.08)',
+                        '& .MuiMenuItem-root': {
+                          padding: '8px 16px',
+                          '&.Mui-selected': {
+                            backgroundColor: 'rgba(0, 118, 255, 0.08)',
+                            '&:hover': {
+                              backgroundColor: 'rgba(0, 118, 255, 0.12)',
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                }}
                 onChange={onChange}
               >
                 {['Male', 'Female', 'Other'].map((opt) => (

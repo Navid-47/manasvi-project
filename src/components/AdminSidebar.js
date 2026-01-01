@@ -48,22 +48,53 @@ export default function AdminSidebar({ onLogout }) {
       sx={{
         width: isExpanded ? expandedWidth : collapsedWidth,
         flexShrink: 0,
-        transition: 'width 0.3s ease',
         '& .MuiDrawer-paper': {
           width: isExpanded ? expandedWidth : collapsedWidth,
-          boxSizing: 'border-box',
-          borderRight: '1px solid var(--border)',
-          backgroundColor: 'var(--surface)',
-          position: 'relative',
-          height: 'calc(100vh - 64px)',
-          top: 10,
-          transition: 'width 0.3s ease',
+          borderRight: '1px solid #e2e8f0',
+          backgroundColor: 'white',
+          transition: 'width 0.2s ease',
+          boxShadow: '2px 0 10px rgba(0,0,0,0.02)',
           overflowX: 'hidden',
+          height: '100vh',
+          position: 'relative',
+          '&:hover': {
+            boxShadow: '4px 0 15px rgba(0,0,0,0.04)'
+          }
         },
       }}
     >
-      <Toolbar />
-      <Box sx={{ overflow: 'hidden', py: 1 }}>
+      <Toolbar>
+        <Box sx={{ 
+          width: '100%', 
+          display: 'flex', 
+          justifyContent: 'center', 
+          py: 2, 
+          px: 1 
+        }}>
+          <Box
+            sx={{
+              width: isExpanded ? 120 : 40,
+              height: 40,
+              background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontWeight: 800,
+              fontSize: isExpanded ? '1.2rem' : '1rem',
+              letterSpacing: '0.5px',
+              transition: 'all 0.2s ease',
+              overflow: 'hidden',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {isExpanded ? 'MANASVI' : 'M'}
+          </Box>
+        </Box>
+      </Toolbar>
+      
+      <Box sx={{ overflow: 'hidden', py: 1, px: 1 }}>
         <List>
           {items.map((item) => (
             <Tooltip key={item.to} title={!isExpanded ? item.label : ''} placement="right" arrow>
@@ -71,14 +102,31 @@ export default function AdminSidebar({ onLogout }) {
                 component={NavLink}
                 to={item.to}
                 sx={{
-                  borderRadius: 'var(--radius)',
-                  mx: 1,
-                  my: 0.5,
+                  minHeight: 48,
                   justifyContent: isExpanded ? 'initial' : 'center',
+                  px: 2.5,
+                  color: '#64748b',
+                  borderRadius: '8px',
+                  mx: 0.5,
+                  my: 0.5,
                   '&.active': {
-                    backgroundColor: 'rgba(var(--brand-rgb), 0.08)',
-                    color: 'var(--brand)',
+                    color: '#4f46e5',
+                    backgroundColor: '#eef2ff',
+                    '& .MuiListItemIcon-root': {
+                      color: '#4f46e5',
+                    },
+                    '&:hover': {
+                      backgroundColor: '#e0e7ff',
+                    }
                   },
+                  '&:hover': {
+                    backgroundColor: '#f8fafc',
+                    '& .MuiListItemIcon-root': {
+                      color: '#4f46e5',
+                    },
+                    color: '#4f46e5',
+                  },
+                  transition: 'all 0.2s ease',
                 }}
               >
                 <ListItemIcon
@@ -94,19 +142,24 @@ export default function AdminSidebar({ onLogout }) {
               </ListItemButton>
             </Tooltip>
           ))}
-
-          <Tooltip title={!isExpanded ? 'Logout' : ''} placement="right" arrow>
+          
+          <Box sx={{ mt: 1, px: 1 }}>
             <ListItemButton
               onClick={handleLogout}
               sx={{
-                borderRadius: 'var(--radius)',
-                mx: 1,
-                my: 0.5,
-                color: 'var(--error)',
+                minHeight: 48,
                 justifyContent: isExpanded ? 'initial' : 'center',
+                px: 2.5,
+                color: '#ef4444',
+                borderRadius: '8px',
                 '&:hover': {
-                  backgroundColor: 'rgba(255, 0, 0, 0.08)',
+                  backgroundColor: '#fef2f2',
+                  '& .MuiListItemIcon-root': {
+                    color: '#dc2626',
+                  },
+                  color: '#dc2626',
                 },
+                transition: 'all 0.2s ease',
               }}
             >
               <ListItemIcon
@@ -120,7 +173,7 @@ export default function AdminSidebar({ onLogout }) {
               </ListItemIcon>
               {isExpanded && <ListItemText primary="Logout" />}
             </ListItemButton>
-          </Tooltip>
+          </Box>
         </List>
       </Box>
     </Drawer>

@@ -119,8 +119,7 @@ const Navbar = () => {
     { text: 'Destinations', path: '/destinations' },
     { text: 'Tours', path: '/tours' },
     { text: 'About', path: '/about' },
-    { text: 'Contact', path: '/contact' },
-    { text: 'Register', path: '/register' }
+    { text: 'Contact', path: '/contact' }
   ];
 
   // Handle scroll effect
@@ -429,26 +428,49 @@ const Navbar = () => {
                   </Menu>
                 </Box>
               ) : (
-                <Button
-                  component={Link}
-                  to="/login"
-                  variant="contained"
-                  color="primary"
-                  sx={{
-                    ml: 2,
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    px: 3,
-                    py: 1,
-                    borderRadius: 'var(--radius-md)',
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: 'var(--shadow-md)',
-                    },
-                  }}
-                >
-                  Sign In
-                </Button>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <Button
+                    component={Link}
+                    to="/register"
+                    variant="contained"
+                    color="primary"
+                    sx={{
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      px: 3,
+                      py: 1,
+                      borderRadius: 'var(--radius-md)',
+                      background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+                      color: 'white',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: 'var(--shadow-md)',
+                        background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))',
+                      },
+                    }}
+                  >
+                    Register
+                  </Button>
+                  <Button
+                    component={Link}
+                    to="/login"
+                    variant="contained"
+                    color="primary"
+                    sx={{
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      px: 3,
+                      py: 1,
+                      borderRadius: 'var(--radius-md)',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: 'var(--shadow-md)',
+                      },
+                    }}
+                  >
+                    Sign In
+                  </Button>
+                </Box>
               )}
 
               {/* Mobile menu button */}
@@ -731,13 +753,24 @@ const Navbar = () => {
                   to="/login"
                   variant="contained"
                   size="large"
-                  className="hover-scale"
+                  disableElevation
                   sx={{
-                    background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+                    background: 'linear-gradient(45deg, var(--primary) 0%, var(--primary-dark) 100%)',
+                    color: '#fff',
+                    borderRadius: 2,
+                    px: 3,
+                    py: 1.25,
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    boxShadow: '0 4px 14px 0 rgba(0, 118, 255, 0.2)',
                     '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 6px 20px rgba(37, 99, 235, 0.3)',
-                      background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))',
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 6px 20px 0 rgba(0, 118, 255, 0.23)',
+                      background: 'linear-gradient(45deg, var(--primary) 0%, var(--primary-dark) 100%) !important',
+                    },
+                    '&:active': {
+                      transform: 'translateY(0)',
+                      boxShadow: '0 4px 14px 0 rgba(0, 118, 255, 0.15)'
                     },
                     transition: 'all 0.3s ease',
                   }}
