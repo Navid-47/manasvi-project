@@ -41,28 +41,39 @@ const PackageCard = ({ pkg, onBook }) => {
         ) : null}
       </CardContent>
       <CardActions className="px-4 pb-4">
-        <button 
+        <Box
+          component="button"
           onClick={() => onBook?.(pkg)}
-          style={{
+          sx={{
             width: '100%',
             padding: '8px 16px',
-            backgroundColor: 'var(--brand)',
+            background: 'linear-gradient(45deg, var(--primary) 0%, var(--primary-dark) 100%)',
             color: 'white',
             border: 'none',
-            borderRadius: '10px',
+            borderRadius: '8px',
             fontWeight: 600,
             cursor: 'pointer',
             fontSize: '0.875rem',
             fontFamily: 'inherit',
-            transition: 'background-color 0.2s',
-            ':hover': {
-              backgroundColor: 'var(--brand)',
-              filter: 'brightness(0.9)'
+            boxShadow: '0 4px 14px 0 rgba(0, 118, 255, 0.2)',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              transform: 'translateY(-1px)',
+              boxShadow: '0 6px 20px 0 rgba(0, 118, 255, 0.23)',
+              background: 'linear-gradient(45deg, var(--primary) 0%, var(--primary-dark) 100%) !important',
+            },
+            '&:active': {
+              transform: 'translateY(0)',
+              boxShadow: '0 4px 14px 0 rgba(0, 118, 255, 0.15)'
+            },
+            '&:focus': {
+              outline: 'none',
+              background: 'linear-gradient(45deg, var(--primary) 0%, var(--primary-dark) 100%) !important',
             }
           }}
         >
           Book Now
-        </button>
+        </Box>
       </CardActions>
     </Card>
   );

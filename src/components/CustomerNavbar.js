@@ -29,22 +29,14 @@ import NotificationBell from './NotificationBell';
 import { getNotificationsForUser, markAllAsReadForUser } from '../services/notificationService';
 
 const CustomerNavbar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [notifications, setNotifications] = useState([]);
-
-  const handleScroll = () => setIsScrolled(window.scrollY > 10);
-
-  useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -73,12 +65,32 @@ const CustomerNavbar = () => {
   }, [user]);
 
   const handleDrawerToggle = () => setMobileOpen((p) => !p);
-  const handleSearchToggle = () => setSearchOpen((p) => !p);
+  const handleSearchToggle = () => {
+    setIsSearchOpen(prev => !prev);
+    // Clear search term when closing
+    if (isSearchOpen) {
+      setSearchTerm('');
+    }
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
-    console.log('Searching for:', searchTerm);
-    setSearchOpen(false);
-    setSearchTerm('');
+    if (searchTerm.trim()) {
+      // Navigate to search results page with the search term
+      navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
+      setSearchTerm('');
+      setIsSearchOpen(false);
+    }
+  };
+
+  // Handle search when pressing Enter in the search input
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch(e);
+    } else if (e.key === 'Escape') {
+      setSearchTerm('');
+      setIsSearchOpen(false);
+    }
   };
 
   const handleReadAllNotifications = () => {
@@ -132,29 +144,69 @@ const CustomerNavbar = () => {
   return (
     <>
       <AppBar
-        position="sticky"
-        className={`shadow-md transition-all duration-300 ${
-          isScrolled ? 'bg-white' : 'bg-white/90'
-        }`}
+        position="fixed"
+        elevation={1}
         sx={{
-          backgroundColor: isScrolled ? '#fff' : 'rgba(255, 255, 255, 0.9)',
-          boxShadow: isScrolled ? '0 2px 10px rgba(0,0,0,0.1)' : 'none',
-          backdropFilter: isScrolled ? 'none' : 'blur(10px)',
+          background: '#e1f0ff',
+          color: 'var(--text)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
+          transition: 'all 0.3s ease',
+          '&:hover': {
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.04)'
+          }
         }}
       >
-        <Toolbar className="flex justify-between items-center py-4 px-4 md:px-8">
+        <Toolbar sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          px: { xs: 2, md: 4 },
+          py: 1.5,
+          maxWidth: '100%',
+          margin: '0 auto',
+          width: '100%'
+        }}>
           {/* Logo */}
-          <div className="flex items-center animate-fade-in">
-            <div className="w-10 h-10 rounded-full bg-brand flex items-center justify-center mr-3 hover-scale">
-              <span className="text-white font-bold text-lg">TM</span>
-            </div>
-            <Link
-              to="/"
-              className="text-text text-xl font-bold hover:text-brand transition-colors duration-300 no-underline"
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 2.5,
+            '&:hover': {
+              '& .logo-icon': {
+                transform: 'rotate(15deg)'
+              }
+            }
+          }}>
+            <Box
+              className="logo-icon"
+              sx={{
+                width: 42,
+                height: 42,
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(37, 99, 235, 0.15)',
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+              }}
             >
-              Travel Manasvi
-            </Link>
-          </div>
+              <Typography variant="h6" sx={{ color: '#fff', fontWeight: 800, fontSize: '1.1rem' }}>
+                TM
+              </Typography>
+            </Box>
+            <Box>
+              <Typography variant="h6" sx={{ 
+                fontWeight: 700, 
+                color: 'var(--text)',
+                fontSize: '1.25rem',
+                lineHeight: 1.2,
+                letterSpacing: '0.3px'
+              }}>
+                Travel Manasvi
+              </Typography>
+            </Box>
+          </Box>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
@@ -173,12 +225,40 @@ const CustomerNavbar = () => {
               </Link>
             ))}
 
-            <IconButton
-              onClick={handleSearchToggle}
-              className="text-text hover:text-brand transition-all duration-300 transform hover:scale-110"
-            >
-              <SearchIcon />
-            </IconButton>
+            {isSearchOpen ? (
+              <div className="flex items-center bg-white rounded-full px-3 py-1 shadow-sm">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Search for destinations..."
+                  className="border-0 outline-0 bg-transparent text-sm text-gray-800 w-40 md:w-48 px-2 py-1"
+                  autoFocus
+                />
+                <IconButton 
+                  onClick={handleSearch} 
+                  size="small"
+                  className="text-brand hover:bg-brand/10"
+                >
+                  <SearchIcon fontSize="small" />
+                </IconButton>
+                <IconButton 
+                  onClick={handleSearchToggle} 
+                  size="small"
+                  className="text-gray-500 hover:bg-gray-100"
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </div>
+            ) : (
+              <IconButton
+                onClick={handleSearchToggle}
+                className="text-text hover:text-brand transition-all duration-300 transform hover:scale-110"
+              >
+                <SearchIcon />
+              </IconButton>
+            )}
 
             {user && (
               <NotificationBell
@@ -195,7 +275,24 @@ const CustomerNavbar = () => {
                   size="small"
                   className="hover-scale"
                 >
-                  <Avatar sx={{ width: 36, height: 36, bgcolor: 'var(--brand)' }}>
+                  <Avatar 
+                    sx={{ 
+                      width: 36, 
+                      height: 36, 
+                      bgcolor: 'var(--primary-dark)',
+                      color: '#ffffff',
+                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      fontWeight: 700,
+                      fontSize: '1rem',
+                      textShadow: '0 1px 2px rgba(0,0,0,0.2)',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                      '&:hover': {
+                        transform: 'scale(1.08)',
+                        boxShadow: '0 3px 10px rgba(0,0,0,0.15)'
+                      },
+                      transition: 'all 0.2s ease-in-out'
+                    }}
+                  >
                     {initials}
                   </Avatar>
                 </IconButton>
@@ -234,74 +331,15 @@ const CustomerNavbar = () => {
 
           {/* Mobile Navigation Toggle */}
           <div className="flex items-center md:hidden">
-            <IconButton
-              onClick={handleSearchToggle}
-              className="text-text hover:text-brand transition-all duration-300 transform hover:scale-110"
-            >
-              <SearchIcon />
-            </IconButton>
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              edge="start"
-              onClick={handleDrawerToggle}
-              className="text-text transition-all duration-300 transform hover:scale-110"
-            >
+            <IconButton color="inherit" aria-label="open drawer" edge="start" onClick={handleDrawerToggle} className="text-text hover:text-brand transition-all duration-300 transform hover:scale-110">
               <MenuIcon />
             </IconButton>
           </div>
         </Toolbar>
-
-        {/* Search Bar */}
-        {searchOpen && (
-          <div className="px-4 pb-4 md:px-8 animate-slide-in-down">
-            <form onSubmit={handleSearch}>
-              <div className="relative">
-                <TextField
-                  fullWidth
-                  variant="outlined"
-                  placeholder="Search destinations, tours, etc..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  autoFocus
-                  sx={{
-                    backgroundColor: 'white',
-                    borderRadius: '8px',
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': { borderColor: 'var(--border)' },
-                      '&:hover fieldset': { borderColor: 'var(--brand)' },
-                      '&.Mui-focused fieldset': { borderColor: 'var(--brand)' },
-                    },
-                  }}
-                  InputProps={{
-                    endAdornment: (
-                      <IconButton type="submit" className="text-brand hover-scale">
-                        <SearchIcon />
-                      </IconButton>
-                    ),
-                  }}
-                />
-                <IconButton
-                  onClick={handleSearchToggle}
-                  className="absolute right-14 top-1/2 transform -translate-y-1/2 text-text-muted hover:text-text hover-scale"
-                >
-                  <CloseIcon />
-                </IconButton>
-              </div>
-            </form>
-          </div>
-        )}
       </AppBar>
 
       {/* Mobile Drawer */}
-      <Drawer
-        variant="temporary"
-        open={mobileOpen}
-        onClose={handleDrawerToggle}
-        ModalProps={{ keepMounted: true }}
-        className="md:hidden"
-        PaperProps={{ sx: { width: '80%', maxWidth: '300px' } }}
-      >
+      <Drawer variant="temporary" open={mobileOpen} onClose={handleDrawerToggle} ModalProps={{ keepMounted: true }} className="md:hidden" PaperProps={{ sx: { width: '80%', maxWidth: '300px' } }}>
         <div className="p-4 bg-brand text-white">
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center">
@@ -317,7 +355,9 @@ const CustomerNavbar = () => {
 
           {/* Profile Inline */}
           <div className="flex items-center gap-3">
-            <Avatar sx={{ bgcolor: '#fff', color: 'var(--brand)' }}>{initials}</Avatar>
+            <Avatar sx={{ bgcolor: 'var(--primary-dark)', color: '#ffffff', width: 40, height: 40, fontSize: '1.1rem', fontWeight: 700, border: '1px solid rgba(0, 0, 0, 0.1)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+              {initials}
+            </Avatar>
             <div>
               <div className="font-semibold">{displayName}</div>
               <div className="text-white/80 text-sm">Customer</div>
@@ -327,82 +367,25 @@ const CustomerNavbar = () => {
 
         <List>
           {navLinks.map((link) => (
-            <ListItem
-              button
-              key={link.text}
-              component={Link}
-              to={link.path}
-              onClick={handleDrawerToggle}
-              className={`${
-                location.pathname === link.path ? 'bg-brand/10' : ''
-              } transition-all duration-300 transform hover:scale-105 hover:bg-brand/20 rounded-lg my-1`}
-            >
-              <ListItemText
-                primary={link.text}
-                className={
-                  location.pathname === link.path ? 'text-brand font-bold' : 'text-text'
-                }
-              />
+            <ListItem button key={link.text} component={Link} to={link.path} onClick={handleDrawerToggle} className={`${location.pathname === link.path ? 'bg-brand/10' : ''} transition-all duration-300 transform hover:scale-105 hover:bg-brand/20 rounded-lg my-1`}>
+              <ListItemText primary={link.text} className={location.pathname === link.path ? 'text-brand font-bold' : 'text-text'} />
             </ListItem>
           ))}
-
           <Divider sx={{ my: 1 }} />
-
-          <ListItem
-            button
-            onClick={() => {
-              handleDrawerToggle();
-              navigate('/user-dashboard');
-            }}
-            className="mx-2 rounded transition-all duration-300 transform hover:scale-105 hover:bg-brand/10"
-          >
+          <ListItem button onClick={() => { handleDrawerToggle(); navigate('/user-dashboard'); }} className="mx-2 rounded transition-all duration-300 transform hover:scale-105 hover:bg-brand/10">
             <ListItemText primary="Dashboard" />
           </ListItem>
-          <ListItem
-            button
-            onClick={() => {
-              handleDrawerToggle();
-              navigate('/user-dashboard/profile');
-            }}
-            className="mx-2 rounded transition-all duration-300 transform hover:scale-105 hover:bg-brand/10"
-          >
+          <ListItem button onClick={() => { handleDrawerToggle(); navigate('/user-dashboard/profile'); }} className="mx-2 rounded transition-all duration-300 transform hover:scale-105 hover:bg-brand/10">
             <ListItemText primary="My Profile" />
           </ListItem>
-          <ListItem
-            button
-            onClick={() => {
-              handleDrawerToggle();
-              handleLogout();
-            }}
-            className="mx-2 rounded transition-all duration-300 transform hover:scale-105 hover:bg-brand/10"
-          >
+          <ListItem button onClick={() => { handleDrawerToggle(); handleLogout(); }} className="mx-2 rounded transition-all duration-300 transform hover:scale-105 hover:bg-brand/10">
             <ListItemText primary="Logout" />
           </ListItem>
         </List>
 
         <div className="p-4">
           <form onSubmit={handleSearch} className="relative">
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              sx={{
-                backgroundColor: 'white',
-                borderRadius: '8px',
-                '& .MuiOutlinedInput-root': {
-                  '& fieldset': { borderColor: 'var(--border)' },
-                },
-              }}
-              InputProps={{
-                endAdornment: (
-                  <IconButton type="submit" className="text-brand hover-scale">
-                    <SearchIcon />
-                  </IconButton>
-                ),
-              }}
-            />
+            <TextField fullWidth variant="outlined" placeholder="Search for destinations..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} sx={{ backgroundColor: 'white', borderRadius: '8px', '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: 'var(--border)' } } }} InputProps={{ endAdornment: (<IconButton type="submit" className="text-brand hover-scale"><SearchIcon /></IconButton>) }} />
           </form>
         </div>
       </Drawer>

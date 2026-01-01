@@ -32,22 +32,26 @@ export default function Dashboard() {
           display: 'flex',
           flexDirection: { xs: 'column', md: 'row' },
           backgroundColor: 'var(--bg)',
-          minHeight: 'calc(100vh - 120px)',
+          minHeight: 'calc(100vh - 64px)',
         }}
       >
         {/* Sidebar */}
-        <Sidebar sx={{ position: 'static' }} />
+        <Sidebar sx={{ position: 'sticky', top: 0, height: 'calc(100vh - 64px)' }} />
 
         {/* Main Content */}
         <Box
           component="main"
           sx={{
             flexGrow: 1,
-            p: { xs: 2, md: 3 },
+            p: 0,
+            width: '100%',
+            overflow: 'auto',
+            height: 'calc(100vh - 64px)',
           }}
         >
           <Box
             sx={{
+              minHeight: '100%',
               animation: 'fadeInUp 400ms ease-out',
               '@keyframes fadeInUp': {
                 from: { opacity: 0, transform: 'translateY(8px)' },

@@ -379,8 +379,23 @@ const DestinationDetails = () => {
               fullWidth
               variant="contained"
               size="large"
-              color="primary"
-              sx={{ mb: 2, py: 1.5, fontWeight: 'bold' }}
+              disableElevation
+              sx={{
+                mb: 2,
+                py: 1.5,
+                fontWeight: 600,
+                background: 'linear-gradient(45deg, var(--primary) 0%, var(--primary-dark) 100%)',
+                '&:hover': {
+                  transform: 'translateY(-1px)',
+                  boxShadow: '0 6px 20px 0 rgba(0, 118, 255, 0.23)',
+                  background: 'linear-gradient(45deg, var(--primary) 0%, var(--primary-dark) 100%) !important',
+                },
+                '&:active': {
+                  transform: 'translateY(0)',
+                  boxShadow: '0 4px 14px 0 rgba(0, 118, 255, 0.15)'
+                },
+                transition: 'all 0.3s ease',
+              }}
               onClick={() => navigate('/book-now')}
             >
               Book Now

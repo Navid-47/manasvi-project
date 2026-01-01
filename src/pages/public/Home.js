@@ -338,9 +338,13 @@ const Home = () => {
                       ))}
                       <span className="ml-2 text-text-muted rating-value">{destination.rating}</span>
                     </div>
-                    <button className="bg-brand text-white px-4 py-2 rounded-lg transition-all duration-300 hover-brand">
+                    <Link
+                      to="/destinations"
+                      className="inline-block border-2 border-brand text-brand hover:bg-brand hover:text-white font-bold py-3 px-8 rounded-lg transition duration-300 hover-brand no-underline"
+                      aria-label="View all destinations"
+                    >
                       Book Now
-                    </button>
+                    </Link>
                   </div>
                 </div>
               </div>

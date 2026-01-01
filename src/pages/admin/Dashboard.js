@@ -108,7 +108,7 @@ export default function AdminDashboard({ standalone = true }) {
     .slice(0, 5);
 
   return (
-    <Box sx={{ minHeight: 'calc(100vh - 120px)', backgroundColor: 'var(--bg)' }}>
+    <Box sx={{ minHeight: 'calc(100vh - 120px)', backgroundColor: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
       {standalone && (
         <>
           <AppBar position="fixed" color="inherit" elevation={0} sx={{ borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
@@ -122,37 +122,53 @@ export default function AdminDashboard({ standalone = true }) {
         </>
       )}
 
-      <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1200, mx: 'auto' }}>
+      <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1200, width: '100%' }}>
         <Fade in timeout={300}>
-          <Box>
-            <Typography variant="h5" sx={{ fontWeight: 700, mb: 1, textAlign: 'center' }}>Welcome, {userName}</Typography>
-            <Typography color="text.secondary" sx={{ mb: 3, textAlign: 'center' }}>Manage packages, bookings, reports, and analytics at a glance.</Typography>
+          <Box sx={{ textAlign: 'center', mb: 4 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, color: 'primary.main' }}>Welcome, {userName}</Typography>
+            <Typography variant="subtitle1" color="text.secondary" sx={{ maxWidth: '800px', mx: 'auto' }}>
+              Manage packages, bookings, reports, and analytics at a glance.
+            </Typography>
           </Box>
         </Fade>
 
-        <Grid container spacing={2} alignItems="stretch">
+        <Grid container spacing={3} justifyContent="center" sx={{ maxWidth: '1400px', mx: 'auto' }}>
           <Grid item xs={12} sm={6} md={3}>
             <Grow in timeout={400}>
               <Paper
                 onClick={() => navigate('/admin-dashboard/payments')}
                 sx={{
                   cursor: 'pointer',
-                  p: 2,
-                  borderRadius: 'var(--radius)',
-                  border: '1px solid var(--border)',
-                  boxShadow: '0 3px 10px rgba(0,0,0,0.08)',
+                  p: 3,
+                  borderRadius: '12px',
+                  border: '1px solid #e2e8f0',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  textAlign: 'center',
                   height: '100%',
-                  minHeight: { xs: 140, sm: 150, md: 160 },
-                  transition: 'transform 0.25s ease, box-shadow 0.25s ease',
-                  '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 10px 20px rgba(0,0,0,0.14)' },
+                  minHeight: { xs: 160, sm: 180, md: 200 },
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover': { 
+                    transform: 'translateY(-6px)', 
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                    borderColor: '#c7d2fe',
+                    backgroundColor: '#f8fafc'
+                  },
                 }}
               >
-              <Typography color="text.secondary">Total Revenue</Typography>
-              <Typography sx={{ fontWeight: 800, color: 'var(--brand)', fontSize: { xs: '1.35rem', md: '1.6rem' } }}>₹{totalRevenue.toLocaleString()}</Typography>
-              <MiniAreaChart series={revenueSeries} />
+              <Box sx={{ mb: 2, p: 2, borderRadius: '50%', bgcolor: 'rgba(79, 70, 229, 0.1)' }}>
+                <Box component="span" sx={{ fontSize: '1.75rem', color: 'primary.main' }}>₹</Box>
+              </Box>
+              <Typography variant="h4" sx={{ fontWeight: 800, color: 'primary.main', mb: 1 }}>
+                ₹{totalRevenue.toLocaleString()}
+              </Typography>
+              <Typography color="text.secondary" sx={{ mb: 2 }}>Total Revenue</Typography>
+              <Box sx={{ width: '100%', maxWidth: '200px' }}>
+                <MiniAreaChart series={revenueSeries} />
+              </Box>
               </Paper>
             </Grow>
           </Grid>
