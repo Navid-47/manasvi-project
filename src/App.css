@@ -5,7 +5,56 @@ html, body, #root {
   min-height: 100vh;
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
   background: linear-gradient(135deg, #f0f4ff 0%, #e6f0ff 100%);
+}
+
+/* Ensure main content has proper spacing below fixed navbar */
+main {
+  position: relative;
+  padding-top: 1rem; /* Add some top padding to all main content */
+}
+
+/* Specific adjustments for pages with the navbar */
+.page-with-navbar {
+  padding-top: 80px; /* Match Navbar height */
+  min-height: calc(100vh - 80px); /* Full viewport height minus navbar */
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .page-with-navbar {
+    padding-top: 64px; /* Slightly smaller navbar on mobile */
+    min-height: calc(100vh - 64px);
+  }
+}
+
+/* Ensure fixed elements don't get hidden behind navbar */
+.fixed-element {
+  position: fixed;
+  top: 80px; /* Account for navbar height */
+  z-index: 100; /* Below navbar but above other content */
+}
+
+/* For pages that need extra top padding */
+.section-padding {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+/* Utility class for elements that need to be below navbar */
+.below-navbar {
+  margin-top: 80px;
+}
+
+@media (max-width: 900px) {
+  .fixed-element {
+    top: 64px;
+  }
+  
+  .below-navbar {
+    margin-top: 64px;
+  }
 }
 
 /* Navbar styles */
@@ -20,9 +69,8 @@ nav {
 
 /* Main content padding to account for fixed navbar */
 main {
-  padding-top: 100px; /* Increased padding to account for navbar */
-  min-height: calc(100vh - 200px); /* Adjust based on your footer height */
-  padding-bottom: 20px;
+  padding-top: 80px; /* Adjust this value based on your navbar height */
+  min-height: calc(100vh - 80px);
 }
 
 /* Existing CRA defaults (kept) */
@@ -31,6 +79,12 @@ main {
   background: transparent;
   min-height: 100vh;
   padding-top: 0;
+}
+
+/* Ensure the main content has proper spacing */
+main {
+  min-height: calc(100vh - 200px); /* Adjust based on your footer height */
+  padding: 20px 0;
 }
 
 .App-logo {

@@ -101,7 +101,9 @@ const CarouselIndicator = styled(Box)(({ theme }) => ({
   gap: theme.spacing(1),
 }));
 
-const IndicatorDot = styled(Box)(({ theme, active }) => ({
+const IndicatorDot = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'active',
+})(({ theme, active }) => ({
   width: 12,
   height: 12,
   borderRadius: '50%',

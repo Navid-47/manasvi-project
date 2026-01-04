@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, Button, Box, Accordion, AccordionSummary, AccordionDetails, Typography } from '@mui/material';
+import { TextField, Button, Box, Accordion, AccordionSummary, AccordionDetails, Typography, CircularProgress } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -89,24 +89,15 @@ const Contact = () => {
   const contactMethods = [
     {
       title: "Head Office",
-      icon: (
-        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-        </svg>
-      ),
+      icon: 'location',
       details: [
         "123 Travel Street",
         "Solapur, Maharashtra 413001, India"
-  
       ]
     },
     {
       title: "Phone Support",
-      icon: (
-        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-        </svg>
-      ),
+      icon: 'phone',
       details: [
         "+91 98765 43210",
         "+91 87654 32109"
@@ -114,11 +105,7 @@ const Contact = () => {
     },
     {
       title: "Email Support",
-      icon: (
-        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-        </svg>
-      ),
+      icon: 'email',
       details: [
         "info@travelmanasvi.com",
         "support@travelmanasvi.com"
@@ -126,11 +113,7 @@ const Contact = () => {
     },
     {
       title: "Working Hours",
-      icon: (
-        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-      ),
+      icon: 'time',
       details: [
         "Monday - Friday: 9:00 AM - 6:00 PM",
         "Saturday: 10:00 AM - 4:00 PM",
@@ -143,36 +126,138 @@ const Contact = () => {
     {
       title: "24/7 Customer Support",
       description: "Our dedicated support team is available around the clock to assist you with any travel-related queries or emergencies during your journey.",
-      icon: (
-        <svg className="w-8 h-8 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path>
-        </svg>
-      )
+      icon: 'support'
     },
     {
       title: "Live Chat",
       description: "Connect instantly with our travel experts through our website's live chat feature for real-time assistance with bookings and inquiries.",
-      icon: (
-        <svg className="w-8 h-8 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-        </svg>
-      )
+      icon: 'chat'
     },
     {
       title: "Social Media",
       description: "Follow us on social media for travel inspiration, updates, and special offers. Our team regularly shares travel tips and destination highlights.",
-      icon: (
-        <svg className="w-8 h-8 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
-        </svg>
-      )
+      icon: 'social'
     }
   ];
 
+  // Function to get icon SVG path data
+  const getIconPath = (type) => {
+    const paths = {
+      location: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
+      phone: 'M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z',
+      email: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+      time: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+      support: 'M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z',
+      chat: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
+      social: 'M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z'
+    };
+    return paths[type] || '';
+  };
+
+  // Function to render icon based on type
+  const renderIcon = (type) => {
+    const isLarge = type === 'support' || type === 'chat' || type === 'social';
+    const iconStyle = {
+      width: isLarge ? '2rem' : '1.5rem',
+      height: isLarge ? '2rem' : '1.5rem',
+      color: isLarge ? 'var(--brand)' : 'white',
+      flexShrink: 0,
+      transition: 'all 1.2s ease-in-out'
+    };
+
+    const path = getIconPath(type);
+    if (!path) return null;
+
+    return (
+      <svg 
+        width={iconStyle.width}
+        height={iconStyle.height}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={iconStyle}
+      >
+        <path d={path} />
+      </svg>
+    );
+  };
+
+  // Animation styles
+  const animationStyles = {
+    fadeIn: {
+      animation: 'fadeIn 2s ease-out forwards',
+      opacity: 0
+    },
+    slideInLeft: {
+      animation: 'slideInLeft 2s ease-out forwards',
+      opacity: 0
+    },
+    slideInRight: {
+      animation: 'slideInRight 2s ease-out forwards',
+      opacity: 0
+    },
+    slideInUp: {
+      animation: 'slideInUp 2s ease-out forwards',
+      opacity: 0
+    },
+    hoverCard: {
+      transition: 'all 1.2s cubic-bezier(0.16, 1, 0.3, 1)',
+      '&:hover': {
+        transform: 'translateY(-5px)',
+        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
+      }
+    }
+  };
+
   return (
     <div className="py-16 bg-bg">
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideInLeft {
+          from { 
+            opacity: 0;
+            transform: translateX(-30px);
+          }
+          to { 
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        @keyframes slideInRight {
+          from { 
+            opacity: 0;
+            transform: translateX(30px);
+          }
+          to { 
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        @keyframes slideInUp {
+          from { 
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to { 
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .hover-scale {
+          transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .hover-scale:hover {
+          transform: scale(1.05);
+        }
+      `}</style>
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12 animate-fade-in">
+        <div className="text-center mb-12" style={animationStyles.fadeIn}>
           <h1 className="text-4xl font-bold mb-4 text-text">Contact Us</h1>
           <p className="text-text-muted max-w-2xl mx-auto">
             Have questions or need assistance? Our team is here to help you plan your perfect journey.
@@ -181,8 +266,15 @@ const Contact = () => {
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Contact Form */}
-          <div id="contact-form" className={`bg-surface rounded-xl shadow-lg p-8 hover-card section-animate ${animatedSections.includes('contact-form') ? 'animate' : ''}`}>
-            <h2 className="text-2xl font-bold mb-6 text-text animate-fade-in">Send us a message</h2>
+          <div 
+            id="contact-form" 
+            className="bg-surface rounded-xl shadow-lg p-8" 
+            style={{
+              ...animationStyles.hoverCard,
+              ...(animatedSections.includes('contact-form') ? animationStyles.slideInLeft : {})
+            }}
+          >
+            <h2 className="text-2xl font-bold mb-6 text-text" style={animationStyles.fadeIn}>Send us a message</h2>
             <form onSubmit={handleSubmit}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <TextField
@@ -192,7 +284,7 @@ const Contact = () => {
                   label="Full Name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="animate-slide-in-left"
+                  style={animationStyles.slideInLeft}
                 />
                 <TextField
                   variant="outlined"
@@ -202,7 +294,7 @@ const Contact = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="animate-slide-in-left"
+                  style={animationStyles.slideInLeft}
                 />
                 <TextField
                   variant="outlined"
@@ -210,7 +302,7 @@ const Contact = () => {
                   label="Subject"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  className="animate-slide-in-left"
+                  style={animationStyles.slideInLeft}
                 />
                 <TextField
                   variant="outlined"
@@ -221,31 +313,41 @@ const Contact = () => {
                   rows={5}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="animate-slide-in-left"
+                  style={animationStyles.slideInLeft}
                 />
                 <Button
                   type="submit"
                   variant="contained"
                   disabled={isSubmitting}
                   sx={{
-                    backgroundColor: 'var(--brand)',
-                    color: 'white',
-                    padding: '12px',
+                    py: 1.5,
                     borderRadius: '8px',
-                    fontWeight: 'bold',
+                    background: 'linear-gradient(to right, #4f46e5, #7c3aed)',
+                    color: 'white',
+                    fontSize: '1rem',
+                    fontWeight: 600,
                     textTransform: 'none',
+                    height: '48px',
                     '&:hover': {
-                      backgroundColor: 'var(--brand-dark)',
+                      background: 'linear-gradient(to right, #4338ca, #6d28d9)',
+                      boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
+                      transform: 'translateY(-1px)'
                     },
                     '&:disabled': {
-                      backgroundColor: 'var(--brand)',
-                      opacity: 0.7,
+                      background: 'linear-gradient(to right, #a5b4fc, #c4b5fd)',
+                      color: 'white',
+                      transform: 'none',
+                      boxShadow: 'none'
                     },
-                    transition: 'all 0.3s ease'
+                    transition: 'all 1.2s ease'
                   }}
-                  className="animate-slide-in-left hover-brand"
                 >
-                  {isSubmitting ? 'Sending...' : 'Send Message'}
+                  {isSubmitting ? (
+                    <>
+                      <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+                      Sending...
+                    </>
+                  ) : 'Send Message'}
                 </Button>
               </Box>
             </form>
@@ -253,9 +355,16 @@ const Contact = () => {
 
           {/* Map and Contact Info */}
           <div>
-            <div id="contact-info" className={`bg-surface rounded-xl shadow-lg p-8 mb-8 hover-card section-animate ${animatedSections.includes('contact-info') ? 'animate' : ''}`}>
-              <h2 className="text-2xl font-bold mb-6 text-text animate-fade-in">Our Office</h2>
-              <div className="h-80 rounded-lg overflow-hidden mb-6 animate-slide-in-right">
+            <div 
+              id="contact-info" 
+              className="bg-surface rounded-xl shadow-lg p-8 mb-8" 
+              style={{
+                ...animationStyles.hoverCard,
+                ...(animatedSections.includes('contact-info') ? animationStyles.slideInRight : {})
+              }}
+            >
+              <h2 className="text-2xl font-bold mb-6 text-text" style={animationStyles.fadeIn}>Our Office</h2>
+              <div className="h-80 rounded-lg overflow-hidden mb-6" style={animatedSections.includes('contact-info') ? animationStyles.slideInRight : {}}>
                 <MapContainer 
                   center={position} 
                   zoom={13} 
@@ -280,9 +389,18 @@ const Contact = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {contactMethods.map((method, index) => (
-                  <div key={index} className="flex items-start animate-slide-in-right hover-scale">
+                  <div 
+                    key={index} 
+                    className="flex items-start hover-scale"
+                    style={{
+                      ...(animatedSections.includes('contact-info') ? {
+                        ...animationStyles.slideInRight,
+                        animationDelay: `${index * 0.3}s`
+                      } : {})
+                    }}
+                  >
                     <div className="bg-brand rounded-full p-3 mr-4 hover-scale">
-                      {method.icon}
+                      {renderIcon(method.icon)}
                     </div>
                     <div>
                       <h3 className="font-bold text-text">{method.title}</h3>
@@ -299,7 +417,7 @@ const Contact = () => {
 
         {/* Support Channels */}
         <div id="support" className={`mt-16 section-animate ${animatedSections.includes('support') ? 'animate' : ''}`}>
-          <div className="text-center mb-12 animate-fade-in">
+          <div className="text-center mb-12" style={animationStyles.fadeIn}>
             <h2 className="text-3xl font-bold mb-4 text-text">Our Support Channels</h2>
             <p className="text-text-muted max-w-2xl mx-auto">
               We offer multiple ways to get in touch with our travel experts
@@ -307,9 +425,19 @@ const Contact = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {supportChannels.map((channel, index) => (
-              <div key={index} className="bg-surface rounded-xl shadow-lg p-6 text-center hover-card animate-slide-in-up" style={{animationDelay: `${index * 0.2}s`}}>
+              <div 
+                key={index} 
+                className="bg-surface rounded-xl shadow-lg p-6 text-center hover-card"
+                style={{
+                  ...animationStyles.hoverCard,
+                  ...(animatedSections.includes('support') ? {
+                    ...animationStyles.slideInUp,
+                    animationDelay: `${index * 0.6}s`
+                  } : {})
+                }}
+              >
                 <div className="flex justify-center mb-4 hover-scale">
-                  {channel.icon}
+                  {renderIcon(channel.icon)}
                 </div>
                 <h3 className="text-xl font-bold mb-3 text-text">{channel.title}</h3>
                 <p className="text-text-muted">{channel.description}</p>
@@ -320,7 +448,7 @@ const Contact = () => {
 
         {/* FAQ Section */}
         <div id="faq" className={`mt-16 section-animate ${animatedSections.includes('faq') ? 'animate' : ''}`}>
-          <div className="text-center mb-12 animate-fade-in">
+          <div className="text-center mb-12" style={animationStyles.fadeIn}>
             <h2 className="text-3xl font-bold mb-4 text-text">Frequently Asked Questions</h2>
             <p className="text-text-muted max-w-2xl mx-auto">
               Find answers to common questions about our services and travel packages
@@ -328,7 +456,15 @@ const Contact = () => {
           </div>
           <div className="space-y-4 max-w-4xl mx-auto">
             {faqs.map((faq, index) => (
-              <Accordion key={index} className="animate-slide-in-up" style={{animationDelay: `${index * 0.1}s`}}>
+              <Accordion 
+                key={index}
+                style={{
+                  ...(animatedSections.includes('faq') ? {
+                    ...animationStyles.slideInUp,
+                    animationDelay: `${index * 0.15}s`
+                  } : {})
+                }}
+              >
                 <AccordionSummary
                   expandIcon={<ExpandMoreIcon />}
                   aria-controls={`panel${index}-content`}

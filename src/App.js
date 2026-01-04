@@ -5,7 +5,7 @@ import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 // Components
-import Navbar from './components/Navbar';
+import Navbar, { NavbarSpacer } from './components/Navbar';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -17,13 +17,12 @@ import Tours from './pages/public/Tours';
 import PackageDetails from './pages/public/PackageDetails';
 import About from './pages/public/About';
 import Contact from './pages/public/Contact';
-
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import NotFound from './pages/errors/NotFound';
 
-// Customer Dashboard pages (these now include their own navbar + footer)
+// Customer Dashboard pages
 import Dashboard from './pages/customer/Dashboard';
 import DashboardHome from './pages/customer/DashboardHome';
 import MyBookings from './pages/customer/MyBookings';
@@ -34,10 +33,9 @@ import BookingForm from './pages/customer/BookingForm';
 import BookingSummary from './pages/customer/BookingSummary';
 import Invoice from './pages/customer/Invoice';
 
-// Admin (mirrors customer dashboard pattern)
+// Admin
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/Dashboard';
-
 import ManageBookings from './pages/admin/ManageBookings';
 import ManagePackages from './pages/admin/ManagePackages';
 import PaymentReports from './pages/admin/PaymentReports';
@@ -58,6 +56,7 @@ function AppContent() {
     <div className="App flex flex-col min-h-screen">
       <ScrollToTop />
       {showPublicShell && <Navbar />}
+      {showPublicShell && <NavbarSpacer />}
       <main className="flex-grow">
         <Routes>
           {/* Public routes */}
