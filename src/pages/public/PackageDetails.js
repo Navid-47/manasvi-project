@@ -183,13 +183,21 @@ const PackageDetails = () => {
                 fullWidth
                 variant="contained"
                 sx={{
-                  backgroundColor: 'var(--brand)',
-                  textTransform: 'none',
+                  py: 1.5,
+                  borderRadius: '8px',
+                  background: 'linear-gradient(to right, #4f46e5, #7c3aed)',
+                  '&:hover': {
+                    background: 'linear-gradient(to right, #4338ca, #6d28d9)',
+                    boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
+                    transform: 'translateY(-1px)'
+                  },
+                  fontSize: '1rem',
                   fontWeight: 600,
-                  borderRadius: '10px',
-                  '&:hover': { backgroundColor: 'var(--brand-dark)' },
+                  textTransform: 'none',
+                  height: '48px',
+                  transition: 'all 0.3s ease',
+                  mb: 2
                 }}
-                className="mb-3"
                 onClick={() => navigate(`/book/${pkg.id}`)}
               >
                 Book This Package
@@ -198,6 +206,21 @@ const PackageDetails = () => {
               <Button
                 fullWidth
                 variant="outlined"
+                sx={{
+                  py: 1.5,
+                  borderRadius: '8px',
+                  borderColor: '#e5e7eb',
+                  color: '#4f46e5',
+                  '&:hover': {
+                    borderColor: '#4f46e5',
+                    backgroundColor: 'rgba(79, 70, 229, 0.04)'
+                  },
+                  fontSize: '1rem',
+                  fontWeight: 500,
+                  textTransform: 'none',
+                  height: '48px',
+                  transition: 'all 0.3s ease'
+                }}
                 onClick={() => navigate('/tours')}
               >
                 Back to Tours

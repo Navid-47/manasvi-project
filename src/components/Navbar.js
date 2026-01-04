@@ -37,6 +37,10 @@ import { getNotificationsForUser, markAllAsReadForUser } from '../services/notif
 const StyledAppBar = styled(AppBar, {
   shouldForwardProp: (prop) => prop !== 'scrolled',
 })(({ theme, scrolled }) => ({
+  height: '80px',
+  display: 'flex',
+  justifyContent: 'center',
+  zIndex: theme.zIndex.drawer + 1,
   backgroundColor: scrolled ? 'var(--surface-elevated)' : 'var(--white)',
   backdropFilter: 'blur(12px)',
   WebkitBackdropFilter: 'blur(12px)',
@@ -72,6 +76,7 @@ const StyledAppBar = styled(AppBar, {
 const NavLink = styled(Link, {
   shouldForwardProp: (prop) => prop !== 'active',
 })(({ theme, active }) => ({
+  // Base styles
   color: active ? 'var(--primary)' : 'var(--text)',
   textDecoration: 'none',
   fontWeight: 500,
@@ -84,6 +89,8 @@ const NavLink = styled(Link, {
     '&::after': {
       width: '100%',
       left: 0,
+      transform: 'translateX(0)',
+      backgroundColor: 'var(--primary-dark)'
     },
   },
   '&::after': {
@@ -95,6 +102,7 @@ const NavLink = styled(Link, {
     left: active ? '0' : '50%',
     backgroundColor: 'var(--primary)',
     transition: 'all 0.3s ease',
+    transform: active ? 'translateX(0)' : 'translateX(-50%)'
   },
 }));
 
@@ -219,7 +227,7 @@ const Navbar = () => {
   // Navigation handlers
   const handleDashboard = () => {
     handleMenuClose();
-    navigate('/user-dashboard');  
+    navigate(user?.role === 'admin' ? '/admin-dashboard' : '/user-dashboard');
   };
 
   const handleMyProfile = () => {
@@ -312,7 +320,7 @@ const Navbar = () => {
                 <NavLink
                   key={link.text}
                   to={link.path}
-                  active={location.pathname === link.path ? 1 : 0}
+                  active={location.pathname === link.path}
                   className="nav-link"
                   sx={{
                     mx: 1,
@@ -410,7 +418,7 @@ const Navbar = () => {
                       <ListItemIcon>
                         <DashboardIcon fontSize="small" />
                       </ListItemIcon>
-                      Dashboard
+                      {user?.role === 'admin' ? 'Admin Dashboard' : 'My Dashboard'}
                     </MenuItem>
                     <MenuItem onClick={handleMyProfile}>
                       <ListItemIcon>
@@ -846,5 +854,13 @@ const Navbar = () => {
     </>
   );
 };
+
+// Spacer component to push content below the fixed navbar
+export const NavbarSpacer = styled('div')(({ theme }) => ({
+  height: '80px',
+  [theme.breakpoints.down('md')]: {
+    height: '64px',
+  },
+}));
 
 export default Navbar;

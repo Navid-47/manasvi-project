@@ -76,8 +76,8 @@ const Tours = () => {
   };
 
   return (
-    <div className="py-16 bg-bg">
-      <div className="container mx-auto px-4">
+    <div className="container mx-auto px-4 py-10">
+      <div>
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4 text-text animate-fade-in">Explore Our Tours</h1>
           <p className="text-text-muted max-w-2xl mx-auto animate-fade-in-delay">

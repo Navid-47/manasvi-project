@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, Button, Link, Box, Alert, CircularProgress } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import { Email } from '@mui/icons-material';
+import { TextField, Button, Box, Alert, CircularProgress } from '@mui/material';
+import { useNavigate, Link } from 'react-router-dom';
+import { Email, ArrowBack } from '@mui/icons-material';
+import BackButton from '../../components/common/BackButton';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -9,13 +10,12 @@ const ForgotPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
   const [resetError, setResetError] = useState('');
-  const [animatedSections, setAnimatedSections] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     // Animate sections on load
     const timer = setTimeout(() => {
-      setAnimatedSections(['form', 'divider']);
+      // setAnimatedSections(['form', 'divider']);
     }, 100);
     
     return () => clearTimeout(timer);
@@ -60,162 +60,170 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-surface p-10 rounded-xl shadow-lg hover-card animate-fade-in">
-        <div className="text-center animate-slide-in-up">
-          <div className="mx-auto h-16 w-16 rounded-full bg-brand flex items-center justify-center mb-4 hover-scale">
-            <Email className="h-8 w-8 text-white" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-shadow duration-300">
+        <div className="p-8 space-y-6">
+          <BackButton className="-mt-2 -ml-2" />
+          
+          <div className="text-center">
+            <div className="mx-auto h-16 w-16 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center mb-4 transform hover:scale-105 transition-transform">
+              <Email className="h-8 w-8 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-1">
+              {resetSuccess ? 'Check Your Email' : 'Reset Password'}
+            </h2>
+            <p className="text-gray-600">
+              {resetSuccess 
+                ? `We've sent password reset instructions to ${email}` 
+                : "Enter your email and we'll send you a link to reset your password."}
+            </p>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-text animate-fade-in">
-            Reset your password
-          </h2>
-          <p className="mt-2 text-center text-text-muted animate-fade-in-delay">
-            {resetSuccess 
-              ? "Check your email for reset instructions" 
-              : "Enter your email and we'll send you reset instructions"}
-          </p>
-        </div>
-        
-        {resetError && (
-          <Alert severity="error" className="mt-4 animate-slide-in-up">
-            {resetError}
-          </Alert>
-        )}
-        
-        {resetSuccess ? (
-          <div className="mt-8 animate-slide-in-up">
-            <Alert severity="success" className="mb-6">
-              Password reset instructions have been sent to {email}. Please check your inbox.
-            </Alert>
-            <Button
-              fullWidth
-              variant="contained"
-              onClick={() => navigate('/login')}
-              sx={{
-                backgroundColor: 'var(--brand)',
-                color: 'white',
-                padding: '12px',
-                borderRadius: '8px',
-                fontWeight: 'bold',
-                textTransform: 'none',
-                '&:hover': {
-                  backgroundColor: 'var(--brand-dark)',
-                  transform: 'translateY(-2px)',
-                },
-                transition: 'all 0.3s ease',
-              }}
-              className="hover-brand"
+          
+          {resetError && (
+            <Alert 
+              severity="error" 
+              className="animate-fade-in"
+              sx={{ borderRadius: '12px' }}
             >
-              Back to Login
-            </Button>
-          </div>
-        ) : (
-          <form className="mt-8 space-y-6 animate-slide-in-up" onSubmit={handleSubmit}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <TextField
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-                id="email"
-                label="Email Address"
-                name="email"
-                autoComplete="email"
-                autoFocus
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (errors.email) {
-                    setErrors(prev => ({ ...prev, email: '' }));
-                  }
-                }}
-                error={!!errors.email}
-                helperText={errors.email}
-                InputProps={{
-                  startAdornment: <Email className="text-text-muted mr-2 hover-scale" />
-                }}
-                className="hover-scale"
-              />
+              {resetError}
+            </Alert>
+          )}
+          
+          {resetSuccess ? (
+            <div className="space-y-6">
+              <Alert 
+                severity="success" 
+                className="animate-fade-in"
+                sx={{ borderRadius: '12px' }}
+              >
+                We've sent password reset instructions to your email address.
+              </Alert>
               <Button
-                type="submit"
                 fullWidth
                 variant="contained"
-                disabled={isLoading}
+                onClick={() => navigate('/login')}
+                startIcon={<ArrowBack />}
                 sx={{
-                  backgroundColor: 'var(--brand)',
-                  color: 'white',
-                  padding: '12px',
+                  py: 1.5,
                   borderRadius: '8px',
-                  fontWeight: 'bold',
-                  textTransform: 'none',
+                  background: 'linear-gradient(to right, #4f46e5, #7c3aed)',
                   '&:hover': {
-                    backgroundColor: 'var(--brand-dark)',
-                    transform: 'translateY(-2px)',
+                    background: 'linear-gradient(to right, #4338ca, #6d28d9)',
+                    boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
+                    transform: 'translateY(-1px)'
                   },
-                  '&:disabled': {
-                    backgroundColor: 'var(--brand)',
-                    opacity: 0.7,
-                  },
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  height: '48px',
                   transition: 'all 0.3s ease',
                 }}
-                className="hover-brand"
               >
-                {isLoading ? (
-                  <CircularProgress size={24} sx={{ color: 'white' }} />
-                ) : (
-                  'Send Reset Instructions'
-                )}
+                Back to Login
               </Button>
-            </Box>
-            <div className="flex items-center justify-center animate-slide-in-up-delay">
-              <Link 
-                href="#" 
-                variant="body2" 
-                sx={{ color: 'var(--brand)' }}
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate('/login');
-                }}
-                className="text-hover"
-              >
-                Back to Sign In
-              </Link>
             </div>
-          </form>
-        )}
-        
-        {!resetSuccess && (
-          <div className={`mt-6 ${animatedSections.includes('divider') ? 'animate-fade-in' : ''}`}>
-            <div className="relative">
+          ) : (
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <TextField
+                  variant="outlined"
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="email"
+                  label="Email Address"
+                  name="email"
+                  autoComplete="email"
+                  autoFocus
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (errors.email) {
+                      setErrors(prev => ({ ...prev, email: '' }));
+                    }
+                  }}
+                  error={!!errors.email}
+                  helperText={errors.email}
+                  InputProps={{
+                    startAdornment: <Email className="text-gray-400 mr-2" />,
+                    sx: {
+                      '&:hover fieldset': {
+                        borderColor: '#6366f1 !important',
+                      },
+                    },
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#6366f1',
+                      },
+                    },
+                  }}
+                />
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  disabled={isLoading}
+                  startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : null}
+                  sx={{
+                    py: 1.5,
+                    borderRadius: '8px',
+                    background: 'linear-gradient(to right, #4f46e5, #7c3aed)',
+                    '&:hover': {
+                      background: 'linear-gradient(to right, #4338ca, #6d28d9)',
+                      boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
+                      transform: 'translateY(-1px)'
+                    },
+                    fontSize: '1rem',
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    height: '48px',
+                    transition: 'all 0.3s ease',
+                    '&:disabled': {
+                      background: 'linear-gradient(to right, #a5b4fc, #c4b5fd)',
+                      color: 'white',
+                    },
+                  }}
+                >
+                  {isLoading ? 'Sending...' : 'Send Reset Link'}
+                </Button>
+              </Box>
+              <div className="text-center text-sm">
+                <Link 
+                  to="/login"
+                  className="font-medium text-indigo-600 hover:text-indigo-500 hover:underline transition-colors duration-200"
+                >
+                  Back to Login
+                </Link>
+              </div>
+            </form>
+          )}
+          
+          {!resetSuccess && (
+            <div className="relative mt-8">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border"></div>
+                <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-surface text-text-muted">
+                <span className="px-2 bg-white text-gray-500">
                   Need help?
                 </span>
               </div>
+              <div className="mt-6 text-center">
+                <p className="text-gray-600 text-sm">
+                  Don't have access to your email?{' '}
+                  <Link 
+                    to="/contact" 
+                    className="text-sm font-medium text-indigo-600 hover:text-indigo-500 hover:underline"
+                  >
+                    Contact support
+                  </Link>
+                </p>
+              </div>
             </div>
-
-            <div className="mt-6 text-center">
-              <p className="text-text-muted text-sm">
-                Don't have access to your email?{' '}
-                <Link 
-                  href="#" 
-                  variant="body2" 
-                  sx={{ color: 'var(--brand)' }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigate('/contact');
-                  }}
-                  className="text-hover"
-                >
-                  Contact Support
-                </Link>
-              </p>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

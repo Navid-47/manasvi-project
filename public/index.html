@@ -19,6 +19,51 @@
     <meta name="theme-color" content="#ffffff" />
     <meta name="description" content="Travel Manasvi - Discover Amazing Places With Us" />
     <title>Travel Manasvi</title>
+    <style>
+      /* Completely remove scrollbar and its buttons/thumb */
+      * {
+        scrollbar-width: none !important; /* Firefox */
+        -ms-overflow-style: none !important;  /* IE and Edge */
+      }
+      
+      /* For WebKit browsers (Chrome, Safari) */
+      *::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        background: transparent !important;
+      }
+      
+      *::-webkit-scrollbar-button {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+      }
+      
+      *::-webkit-scrollbar-thumb {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+      }
+      
+      *::-webkit-scrollbar-track {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+      }
+      
+      /* Specifically target the MUI Drawer */
+      .MuiDrawer-root .MuiDrawer-paper {
+        -ms-overflow-style: none !important;
+        scrollbar-width: none !important;
+        overflow: -moz-scrollbars-none !important;
+      }
+      
+      /* Disable scrollbar buttons in Firefox */
+      * {
+        scrollbar-width: none !important;
+      }
+    </style>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

@@ -45,10 +45,27 @@ export default function AdminSidebar({ onLogout }) {
       variant="permanent"
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => setIsExpanded(false)}
+      className="hide-scrollbar"
       sx={{
         width: isExpanded ? expandedWidth : collapsedWidth,
         flexShrink: 0,
         '& .MuiDrawer-paper': {
+          '&::-webkit-scrollbar': {
+            display: 'none',
+            width: 0,
+            height: 0,
+          },
+          scrollbarWidth: 'none', // Firefox
+          msOverflowStyle: 'none', // IE and Edge
+          overflow: '-moz-scrollbars-none', // Older Firefox
+          '& > *': {
+            '&::-webkit-scrollbar': {
+              display: 'none',
+              width: 0,
+              height: 0,
+            },
+          },
+          overflowY: 'auto',
           width: isExpanded ? expandedWidth : collapsedWidth,
           borderRight: '1px solid #e2e8f0',
           backgroundColor: 'white',

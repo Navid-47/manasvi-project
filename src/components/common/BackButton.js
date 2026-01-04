@@ -16,8 +16,13 @@ const BackButton = ({ to = "/", label = "Home", ...props }) => {
         left: 20,
         textTransform: 'none',
         borderRadius: '8px',
+        fontWeight: 600,
+        color: '#1e40af',
+        borderColor: '#1e40af',
         '&:hover': {
-          backgroundColor: 'rgba(37, 99, 235, 0.04)',
+          backgroundColor: 'rgba(30, 64, 175, 0.1)',
+          borderColor: '#1e3a8a',
+          color: '#1e3a8a',
         },
         ...props.sx
       }}
