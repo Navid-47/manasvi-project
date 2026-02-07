@@ -1,5 +1,6 @@
 import React from 'react';
-import { Card, CardMedia, CardContent, CardActions, Typography, Button, Chip, Rating, Box } from '@mui/material';
+import { motion } from 'framer-motion';
+import { MapPin, Star, Clock, ArrowRight } from 'lucide-react';
 
 const PackageCard = ({ pkg, onBook }) => {
   const title = pkg?.name || pkg?.title || 'Travel Package';
@@ -11,53 +12,61 @@ const PackageCard = ({ pkg, onBook }) => {
   const inclusions = pkg?.inclusions ?? [];
 
   return (
-    <Card className="rounded-xl shadow-lg card-hover overflow-hidden">
-      <CardMedia component="img" height="180" image={image} alt={title} />
-      <CardContent>
-        <div className="flex items-start justify-between mb-2">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      whileHover={{ y: -5 }}
+      transition={{ duration: 0.3 }}
+      className="bg-white rounded-2xl shadow-soft hover:shadow-card overflow-hidden group h-full flex flex-col border border-border/50"
+    >
+      <div className="relative h-48 overflow-hidden">
+        <img
+          src={image}
+          alt={title}
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+        />
+        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1">
+          <Star size={12} className="text-yellow-500" fill="#eab308" />
+          {Number(rating).toFixed(1)}
+        </div>
+      </div>
+
+      <div className="p-5 flex-1 flex flex-col">
+        <div className="flex justify-between items-start mb-2">
           <div>
-            <Typography variant="h6" className="font-bold">{title}</Typography>
-            <Typography variant="body2" color="text.secondary">{destination}</Typography>
+            <h3 className="text-lg font-bold text-gray-900 group-hover:text-brand transition-colors line-clamp-1">{title}</h3>
+            <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+              <MapPin size={14} className="text-gray-400" /> {destination}
+            </p>
           </div>
-          <Typography variant="subtitle1" className="text-green-600 font-semibold">
-            ₹{Number(price).toLocaleString()}
-          </Typography>
         </div>
-        <div className="flex items-center justify-between mb-3">
-          <Box className="flex items-center">
-            <Rating name="pkg-rating" size="small" value={Number(rating)} precision={0.5} readOnly />
-            <Typography variant="body2" className="ml-2 text-text-muted">{Number(rating).toFixed(1)}</Typography>
-          </Box>
-          {duration ? (
-            <Chip label={typeof duration === 'number' ? `${duration} days` : duration} size="small" color="primary" variant="outlined" />
-          ) : null}
+
+        <div className="flex items-center gap-3 mb-4 text-xs text-gray-500">
+          {duration && (
+            <span className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-md">
+              <Clock size={12} /> {typeof duration === 'number' ? `${duration} Days` : duration}
+            </span>
+          )}
+          {inclusions.slice(0, 2).map((inc, i) => (
+            <span key={i} className="bg-brand/5 text-brand px-2 py-1 rounded-md line-clamp-1">{inc}</span>
+          ))}
         </div>
-        {inclusions?.length ? (
-          <div className="flex flex-wrap gap-2">
-            {inclusions.slice(0, 3).map((inc, i) => (
-              <span key={i} className="bg-brand/10 text-brand text-xs px-2 py-1 rounded">{inc}</span>
-            ))}
+
+        <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-100">
+          <div>
+            <p className="text-xs text-gray-500">Price per person</p>
+            <p className="text-lg font-bold text-brand">₹{Number(price).toLocaleString()}</p>
           </div>
-        ) : null}
-      </CardContent>
-      <CardActions className="px-4 pb-4">
-        <Button
-          fullWidth
-          variant="contained"
-          onClick={() => onBook?.(pkg)}
-          sx={{
-            backgroundColor: 'var(--brand)',
-            textTransform: 'none',
-            fontWeight: 600,
-            borderRadius: '10px',
-            '&:hover': { backgroundColor: 'var(--brand-dark)' },
-          }}
-          className="transition-transform duration-150 hover:scale-105"
-        >
-          Book Now
-        </Button>
-      </CardActions>
-    </Card>
+          <button
+            onClick={() => onBook?.(pkg)}
+            className="w-10 h-10 rounded-full bg-brand text-white flex items-center justify-center hover:bg-brand-dark transition-colors shadow-lg shadow-brand/20 group-hover:scale-110"
+          >
+            <ArrowRight size={18} />
+          </button>
+        </div>
+      </div>
+    </motion.div>
   );
 };
 

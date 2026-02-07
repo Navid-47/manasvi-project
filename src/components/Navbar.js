@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from 'react';
-
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { AppBar, Toolbar, IconButton, Drawer, List, ListItem, ListItemText, TextField, Avatar, Menu, MenuItem, Divider, Tooltip, Box, Typography } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import SearchIcon from '@mui/icons-material/Search';
-import CloseIcon from '@mui/icons-material/Close';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Menu, X, Search, User, LogOut, LayoutDashboard, ChevronDown, Bell } from 'lucide-react';
 import NotificationBell from './NotificationBell';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { useAuth } from '../context/AuthContext';
 import { getNotificationsForUser, markAllAsReadForUser } from '../services/notificationService';
 
@@ -15,100 +11,50 @@ const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+
   const location = useLocation();
   const navigate = useNavigate();
-
-  const handleScroll = () => {
-    if (window.scrollY > 10) {
-      setIsScrolled(true);
-    } else {
-      setIsScrolled(false);
-    }
-  };
-
-  useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-
+  const { user, isAuthenticated, logout } = useAuth();
   const [notifications, setNotifications] = useState([]);
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
+  // Handle scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-  const handleSearchToggle = () => {
-    setSearchOpen(!searchOpen);
+  // Notifications logic
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      setNotifications([]);
+      return;
+    }
+    const refresh = () => {
+      try {
+        setNotifications(getNotificationsForUser(user));
+      } catch (e) { console.error(e); }
+    };
+    refresh();
+    window.addEventListener('tm_notifications_updated', refresh);
+    return () => window.removeEventListener('tm_notifications_updated', refresh);
+  }, [isAuthenticated, user]);
+
+  const handleLogout = () => {
+    setUserMenuOpen(false);
+    logout();
+    navigate('/login', { replace: true, state: { loggedOut: true } });
   };
 
   const handleSearch = (e) => {
     e.preventDefault();
-    console.log('Searching for:', searchTerm);
     setSearchOpen(false);
+    // Add actual search logic here or navigation
+    console.log('Searching:', searchTerm);
     setSearchTerm('');
-  };
-
-  // Check if user is logged in
-  const { user, isAuthenticated, logout } = useAuth();
-
-  const isLoggedIn = !!isAuthenticated;
-  useEffect(() => {
-    if (!isLoggedIn || !user) {
-      setNotifications([]);
-      return;
-    }
-
-    const refresh = () => {
-      try {
-        setNotifications(getNotificationsForUser(user));
-      } catch {
-        // ignore
-      }
-    };
-
-    refresh();
-    if (typeof window !== 'undefined') {
-      window.addEventListener('tm_notifications_updated', refresh);
-    }
-
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('tm_notifications_updated', refresh);
-      }
-    };
-  }, [isLoggedIn, user]);
-
-  const displayName = user?.userName || (user?.email ? user.email.split('@')[0] : 'User');
-  const initials = displayName
-    .split('.')
-    .join(' ')
-    .split(/\s+/)
-    .map((s) => s[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-
-  const openMenu = Boolean(anchorEl);
-  const handleMenuOpen = (e) => setAnchorEl(e.currentTarget);
-  const handleMenuClose = () => setAnchorEl(null);
-
-  const handleDashboard = () => {
-    handleMenuClose();
-    navigate('/user-dashboard');
-  };
-
-  const handleMyProfile = () => {
-    handleMenuClose();
-    navigate('/user-dashboard/profile');
-  };
-
-  const handleLogout = () => {
-    handleMenuClose();
-    logout();
-    navigate('/login', { replace: true, state: { loggedOut: true } });
   };
 
   const navLinks = [
@@ -119,327 +65,279 @@ const Navbar = () => {
     { text: 'Contact', path: '/contact' }
   ];
 
-  const handleReadAllNotifications = () => {
-    if (!user) return;
-    try {
-      markAllAsReadForUser(user);
-    } catch {
-      // ignore
-    }
-  };
+  const displayName = user?.userName || (user?.email ? user.email.split('@')[0] : 'User');
+  const userInitials = displayName.slice(0, 2).toUpperCase();
 
   return (
     <>
-      <AppBar
-        position="sticky"
-        className={`shadow-md transition-all duration-300 ${isScrolled ? 'bg-white' : 'bg-white/90'}`}
-        sx={{
-          backgroundColor: isScrolled ? '#fff' : 'rgba(255, 255, 255, 0.9)',
-          boxShadow: isScrolled ? '0 2px 10px rgba(0,0,0,0.1)' : 'none',
-          backdropFilter: isScrolled ? 'none' : 'blur(10px)'
-        }}
+      <motion.nav
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.5 }}
+        className={`fixed w-full z-50 transition-all duration-300 ${isScrolled
+          ? 'bg-white/90 backdrop-blur-md shadow-glass py-3'
+          : 'bg-transparent py-5'
+          }`}
       >
-        <Toolbar className="flex justify-between items-center py-4 px-4 md:px-8">
-          <div className="flex items-center animate-fade-in">
-            <Link to="/" className="flex items-center gap-3 no-underline">
-              <img
-                src="/images/logo.jpg"
-                alt="Travel Manasvi"
-                className="h-10 w-auto rounded-md object-cover"
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = '/favicon.ico';
-                }}
-              />
-              <span className="text-text text-xl font-bold hover:text-brand transition-colors duration-300">
+        <div className="container mx-auto px-4 md:px-8">
+          <div className="flex justify-between items-center">
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-3 group">
+              <div className="relative overflow-hidden rounded-lg w-10 h-10 shadow-lg">
+                <img
+                  src="/images/logo.jpg"
+                  alt="Travel Manasvi"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/40'; }}
+                />
+              </div>
+              <span className={`text-2xl font-display font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand to-brand-dark transition-all duration-300 ${!isScrolled && location.pathname === '/' ? 'text-white' : ''}`}>
                 Travel Manasvi
               </span>
             </Link>
-          </div>
 
-          <div className="hidden md:flex items-center space-x-6">
-            {navLinks.map((link, index) => (
-              <Link
-                key={link.text}
-                to={link.path}
-                className={`${
-                  location.pathname === link.path ? 'text-brand font-bold' : 'text-text hover:text-brand'
-                } transition-all duration-300 font-medium transform hover:scale-105 hover:-translate-y-0.5 no-underline`}
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                {link.text}
-              </Link>
-            ))}
-            <IconButton
-              onClick={handleSearchToggle}
-              className="text-text hover:text-brand transition-all duration-300 transform hover:scale-110"
-            >
-              <SearchIcon />
-            </IconButton>
-            {isLoggedIn && (
-              <NotificationBell
-                notifications={notifications}
-                onReadAll={handleReadAllNotifications}
-              />
-            )}
-
-            {/* Show Profile Menu if logged in, otherwise show Book Now */}
-            {isLoggedIn ? (
-              <Box className="flex items-center gap-2">
-                <Tooltip title={displayName}>
-                  <IconButton
-                    onClick={handleMenuOpen}
-                    size="small"
-                    className="hover-scale"
-                  >
-                    <Avatar sx={{ width: 36, height: 36, bgcolor: 'var(--brand)' }}>
-                      {initials}
-                    </Avatar>
-                  </IconButton>
-                </Tooltip>
-                <IconButton
-                  onClick={handleMenuOpen}
-                  className="text-text hover:text-brand transition-all duration-300"
-                  size="small"
+            {/* Desktop Nav */}
+            <div className="hidden md:flex items-center space-x-8">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.text}
+                  to={link.path}
+                  className={`relative font-medium text-sm transition-colors duration-300 hover:text-brand ${location.pathname === link.path
+                    ? 'text-brand'
+                    : (!isScrolled && location.pathname === '/') ? 'text-white/90 hover:text-white' : 'text-text-secondary'
+                    }`}
                 >
-                  <ArrowDropDownIcon />
-                </IconButton>
-                <Menu
-                  anchorEl={anchorEl}
-                  open={openMenu}
-                  onClose={handleMenuClose}
-                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  {link.text}
+                  {location.pathname === link.path && (
+                    <motion.div
+                      layoutId="underline"
+                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-brand"
+                    />
+                  )}
+                </Link>
+              ))}
+
+              <div className="flex items-center gap-4 pl-4 border-l border-gray-200/20">
+                {/* Search Toggle */}
+                <button
+                  onClick={() => setSearchOpen(!searchOpen)}
+                  className={`transition-colors duration-300 ${(!isScrolled && location.pathname === '/') ? 'text-white hover:text-brand-light' : 'text-text-secondary hover:text-brand'}`}
                 >
-                  <Box px={2} py={1}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                      {displayName}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Customer Dashboard
-                    </Typography>
-                  </Box>
-                  <Divider />
-                  <MenuItem onClick={handleDashboard}>Dashboard</MenuItem>
-                  <MenuItem onClick={handleMyProfile}>My Profile</MenuItem>
-                  <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
-                    Logout
-                  </MenuItem>
-                </Menu>
-              </Box>
-            ) : (
-              <Link 
-                to="/login" 
-                className="bg-brand text-white px-6 py-2 rounded-lg hover:bg-brand-dark transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5 shadow-md hover:shadow-lg no-underline"
-              >
-                Book Now
-              </Link>
-            )}
-          </div>
+                  <Search size={20} />
+                </button>
 
-          <div className="flex items-center md:hidden">
-            <IconButton
-              onClick={handleSearchToggle}
-              className="text-text hover:text-brand transition-all duration-300 transform hover:scale-110"
-            >
-              <SearchIcon />
-            </IconButton>
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              edge="start"
-              onClick={handleDrawerToggle}
-              className="text-text transition-all duration-300 transform hover:scale-110"
-            >
-              <MenuIcon />
-            </IconButton>
-          </div>
-        </Toolbar>
+                {/* Notifications */}
+                {isAuthenticated && (
+                  <NotificationBell
+                    notifications={notifications}
+                    onReadAll={() => user && markAllAsReadForUser(user)}
+                    isScrolled={isScrolled}
+                    isHome={location.pathname === '/'}
+                  />
+                )}
 
-        {searchOpen && (
-          <div className="px-4 pb-4 md:px-8 animate-slide-in-down">
-            <form onSubmit={handleSearch}>
-              <div className="relative">
-                <TextField
-                  fullWidth
-                  variant="outlined"
-                  placeholder="Search destinations, tours, etc..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  autoFocus
-                  sx={{
-                    backgroundColor: 'white',
-                    borderRadius: '8px',
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': {
-                        borderColor: 'var(--border)',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: 'var(--brand)',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: 'var(--brand)',
-                      },
-                    },
-                  }}
-                  InputProps={{
-                    endAdornment: (
-                      <div className="flex items-center space-x-1">
-                        <IconButton
-                          onClick={handleSearchToggle}
-                          className="text-text-muted hover:text-text hover-scale"
-                          aria-label="Close search"
-                        >
-                          <CloseIcon />
-                        </IconButton>
-                        <IconButton type="submit" className="text-brand hover-scale" aria-label="Search">
-                          <SearchIcon />
-                        </IconButton>
+                {/* Auth Section */}
+                {isAuthenticated ? (
+                  <div className="relative">
+                    <button
+                      onClick={() => setUserMenuOpen(!userMenuOpen)}
+                      className="flex items-center gap-2 focus:outline-none"
+                    >
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-brand to-secondary flex items-center justify-center text-white font-bold shadow-md ring-2 ring-white/20">
+                        {userInitials}
                       </div>
-                    ),
-                  }}
-                />
-              </div>
-            </form>
-          </div>
-        )}
-      </AppBar>
+                      <ChevronDown size={16} className={(!isScrolled && location.pathname === '/') ? 'text-white' : 'text-text-secondary'} />
+                    </button>
 
-      <Drawer
-        variant="temporary"
-        open={mobileOpen}
-        onClose={handleDrawerToggle}
-        ModalProps={{ keepMounted: true }}
-        className="md:hidden"
-        PaperProps={{ sx: { width: '80%', maxWidth: '300px' } }}
-      >
-        <div className="p-4 bg-brand text-white">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-2">
-              <img
-                src="/images/logo.jpg"
-                alt="Travel Manasvi"
-                className="h-8 w-auto rounded object-cover"
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = '/favicon.ico';
-                }}
-              />
-              <span className="text-xl font-bold">Travel Manasvi</span>
-            </div>
-            <IconButton onClick={handleDrawerToggle} className="text-white hover-scale">
-              <CloseIcon />
-            </IconButton>
-          </div>
-          
-          {/* Profile Inline if logged in */}
-          {isLoggedIn && (
-            <div className="flex items-center gap-3">
-              <Avatar sx={{ bgcolor: '#fff', color: 'var(--brand)' }}>{initials}</Avatar>
-              <div>
-                <div className="font-semibold">{displayName}</div>
-                <div className="text-white/80 text-sm">Customer</div>
+                    <AnimatePresence>
+                      {userMenuOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          className="absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden"
+                          onMouseLeave={() => setUserMenuOpen(false)}
+                        >
+                          <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
+                            <p className="text-sm font-semibold text-text-primary">{displayName}</p>
+                            <p className="text-xs text-text-secondary truncate">{user.email}</p>
+                          </div>
+                          <div className="py-1">
+                            <Link
+                              to={user?.role === 'admin' ? '/admin-dashboard' : '/user-dashboard'}
+                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-text-secondary hover:text-brand hover:bg-brand/5 transition-colors"
+                              onClick={() => setUserMenuOpen(false)}
+                            >
+                              <LayoutDashboard size={16} /> Dashboard
+                            </Link>
+                            <Link
+                              to={user?.role === 'admin' ? '/admin-dashboard' : '/user-dashboard/profile'}
+                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-text-secondary hover:text-brand hover:bg-brand/5 transition-colors"
+                              onClick={() => setUserMenuOpen(false)}
+                            >
+                              <User size={16} /> Profile
+                            </Link>
+                            <button
+                              onClick={handleLogout}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors text-left"
+                            >
+                              <LogOut size={16} /> Logout
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <Link
+                    to="/login"
+                    className="px-6 py-2 bg-gradient-to-r from-brand to-brand-dark text-white rounded-full font-medium text-sm shadow-lg hover:shadow-brand/30 hover:-translate-y-0.5 transition-all duration-300"
+                  >
+                    Book Now
+                  </Link>
+                )}
               </div>
             </div>
-          )}
+
+            {/* Mobile Toggle */}
+            <div className="md:hidden flex items-center gap-4">
+              {(!isScrolled && location.pathname === '/') ? (
+                <button onClick={() => setMobileOpen(true)} className="text-white">
+                  <Menu size={24} />
+                </button>
+              ) : (
+                <button onClick={() => setMobileOpen(true)} className="text-text-primary">
+                  <Menu size={24} />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
-        <List>
-          {navLinks.map((link) => (
-            <ListItem
-              button
-              key={link.text}
-              component={Link}
-              to={link.path}
-              onClick={handleDrawerToggle}
-              className={`${
-                location.pathname === link.path ? 'bg-brand/10' : ''
-              } transition-all duration-300 transform hover:scale-105 hover:bg-brand/20 rounded-lg my-1`}
+        {/* Search Bar Overlay */}
+        <AnimatePresence>
+          {searchOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="absolute top-full left-0 w-full bg-white shadow-lg overflow-hidden border-t border-gray-100"
             >
-              <ListItemText
-                primary={link.text}
-                className={location.pathname === link.path ? 'text-brand font-bold' : 'text-text'}
-              />
-            </ListItem>
-          ))}
-          
-          <Divider sx={{ my: 1 }} />
-          
-          {/* Show profile options if logged in, otherwise show Book Now */}
-          {isLoggedIn ? (
-            <>
-              <ListItem
-                button
-                onClick={() => {
-                  handleDrawerToggle();
-                  navigate('/user-dashboard');
-                }}
-                className="mx-2 rounded transition-all duration-300 transform hover:scale-105 hover:bg-brand/10"
-              >
-                <ListItemText primary="Dashboard" />
-              </ListItem>
-              <ListItem
-                button
-                onClick={() => {
-                  handleDrawerToggle();
-                  navigate('/user-dashboard/profile');
-                }}
-                className="mx-2 rounded transition-all duration-300 transform hover:scale-105 hover:bg-brand/10"
-              >
-                <ListItemText primary="My Profile" />
-              </ListItem>
-              <ListItem
-                button
-                onClick={() => {
-                  handleDrawerToggle();
-                  handleLogout();
-                }}
-                className="mx-2 rounded transition-all duration-300 transform hover:scale-105 hover:bg-brand/10"
-              >
-                <ListItemText primary="Logout" />
-              </ListItem>
-            </>
-          ) : (
-            <ListItem 
-              button 
-              component={Link}
-              to="/login"
-              onClick={handleDrawerToggle}
-              className="bg-brand text-white mx-4 mt-4 rounded transition-all duration-300 transform hover:scale-105 hover:bg-brand-dark hover:-translate-y-0.5 shadow-md hover:shadow-lg"
-            >
-              <ListItemText primary="Book Now" />
-            </ListItem>
+              <div className="container mx-auto px-4 py-4">
+                <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto">
+                  <input
+                    type="text"
+                    placeholder="Where do you want to go?"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none transition-all"
+                    autoFocus
+                  />
+                  <Search className="absolute left-4 top-3.5 text-gray-400" size={20} />
+                  <button
+                    type="button"
+                    onClick={() => setSearchOpen(false)}
+                    className="absolute right-4 top-3.5 text-gray-400 hover:text-gray-600"
+                  >
+                    <X size={20} />
+                  </button>
+                </form>
+              </div>
+            </motion.div>
           )}
-        </List>
+        </AnimatePresence>
+      </motion.nav>
 
-        <div className="p-4">
-          <form onSubmit={handleSearch} className="relative">
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              sx={{
-                backgroundColor: 'white',
-                borderRadius: '8px',
-                '& .MuiOutlinedInput-root': {
-                  '& fieldset': {
-                    borderColor: 'var(--border)',
-                  },
-                },
-              }}
-              InputProps={{
-                endAdornment: (
-                  <IconButton type="submit" className="text-brand hover-scale">
-                    <SearchIcon />
-                  </IconButton>
-                ),
-              }}
+      {/* Mobile Drawer */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+              onClick={() => setMobileOpen(false)}
             />
-          </form>
-        </div>
-      </Drawer>
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 right-0 w-[80%] max-w-sm bg-white z-50 shadow-2xl p-6 flex flex-col"
+            >
+              <div className="flex justify-between items-center mb-8">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-brand flex items-center justify-center text-white font-bold">
+                    TM
+                  </div>
+                  <span className="font-bold text-lg">Travel Manasvi</span>
+                </div>
+                <button onClick={() => setMobileOpen(false)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto">
+                <div className="space-y-2">
+                  {navLinks.map((link) => (
+                    <Link
+                      key={link.text}
+                      to={link.path}
+                      onClick={() => setMobileOpen(false)}
+                      className={`block px-4 py-3 rounded-xl transition-all ${location.pathname === link.path
+                        ? 'bg-brand/10 text-brand font-bold'
+                        : 'text-text-primary hover:bg-gray-50'
+                        }`}
+                    >
+                      {link.text}
+                    </Link>
+                  ))}
+                </div>
+
+                {isAuthenticated && (
+                  <div className="mt-8 border-t border-gray-100 pt-6">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 px-4">Account</p>
+                    <Link
+                      to={user?.role === 'admin' ? '/admin-dashboard' : '/user-dashboard'}
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 text-text-primary"
+                    >
+                      <LayoutDashboard size={18} /> Dashboard
+                    </Link>
+                    <Link
+                      to={user?.role === 'admin' ? '/admin-dashboard' : '/user-dashboard/profile'}
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 text-text-primary"
+                    >
+                      <User size={18} /> My Profile
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-gray-100">
+                {isAuthenticated ? (
+                  <button
+                    onClick={handleLogout}
+                    className="w-full py-3 bg-red-50 text-red-500 rounded-xl font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <LogOut size={18} /> Logout
+                  </button>
+                ) : (
+                  <Link
+                    to="/login"
+                    onClick={() => setMobileOpen(false)}
+                    className="block w-full py-3 bg-brand text-white text-center rounded-xl font-bold shadow-lg shadow-brand/20"
+                  >
+                    Book Now
+                  </Link>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </>
   );
 };

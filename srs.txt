@@ -1,0 +1,51 @@
+Travel Agency Management System
+Functional Requirements
+1. Authentication & User Roles
+• Admin → manage packages, bookings, and payments.
+• Customer → register/login, book packages, and pay online.
+• Agent (optional) → manage their assigned customers.
+2. Tour Package Management
+• Admin can add/edit/delete travel packages (domestic/international).
+• Package details: name, destination, itinerary, cost per person, duration, inclusions/exclusions.
+• Show packages with images, filters (price, destination, duration).
+3. Booking Module
+• Customers can book packages online.
+• Collect details:
+o Number of travelers
+o Travel date
+o Traveler information (Name, Age, Contact, Passport No. if international)
+• Auto-calculate total cost.
+4. Payment Module (with Razorpay )
+• Multiple payment options: UPI, Card, Netbanking, Wallets.
+• On booking confirmation:
+o Backend generates Razorpay Order ID.
+o Customer redirected to Razorpay Checkout.
+o After payment:
+▪ Update booking status as "Confirmed".
+▪ Store payment details in DB.
+▪ Generate digital invoice/receipt.
+▪ Send confirmation email/SMS with itinerary.
+• Handle payment failures (retry option).
+5. Invoice & Ticketing
+• Auto-generate invoice with Razorpay Payment ID & Order ID.
+• Option to download as PDF.
+• QR code on invoice for quick verification.
+6. Customer Dashboard
+• View bookings (Upcoming / Completed / Cancelled).
+• View payment history.
+• Cancel booking (with refund request if applicable).
+7. Admin Dashboard
+• Overview of total bookings, revenue, and top packages.
+• Payment reports:
+o Successful payments
+o Pending/Failed transactions
+• Customer & package-wise sales analytics.
+8. Notifications
+• Email/SMS for booking confirmation & payment success.
+• Reminders before travel date.
+Non-Functional Requirements
+• Security → API keys hidden, payment verified with Razorpay signature.
+• Performance → Payment response within 2–3 seconds.
+• Scalability → Support multiple packages & high traffic.
+• Reliability → Transaction logs + Razorpay webhooks for double-checking status.
+• Usability → Mobile-friendly booking & payment flow.

@@ -1,36 +1,7 @@
-import React from 'react';
-import {
-  AppBar,
-  Box,
-  Toolbar,
-  Typography,
-  Paper,
-  Grid,
-  TextField,
-  MenuItem,
-  Button,
-  Fade,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  Checkbox,
-  TableSortLabel,
-  TablePagination,
-  Drawer,
-  Divider,
-  Stack,
-  Snackbar,
-  Alert,
-  Chip,
-  Menu,
-  IconButton,
-  Tooltip,
-  Avatar,
-} from '@mui/material';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
+import React, { useState, useEffect } from 'react';
 import { getAllBookings, updateBooking } from '../../services/bookingService';
+import { Search, Filter, MoreVertical, Check, X, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Download, Calendar } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const STATUSES = ['Pending', 'Confirmed', 'Cancelled'];
 
@@ -45,29 +16,30 @@ function mapBookings(source) {
   }));
 }
 
-export default function ManageBookings({ standalone = true }) {
-  const [bookings, setBookings] = React.useState(() => mapBookings(getAllBookings()));
-  const [query, setQuery] = React.useState('');
-  const [debouncedQuery, setDebouncedQuery] = React.useState('');
-  const [status, setStatus] = React.useState('All');
-  const [selected, setSelected] = React.useState([]);
-  const [drawer, setDrawer] = React.useState({ open: false, booking: null });
-  const [toast, setToast] = React.useState(null);
-  const [orderBy, setOrderBy] = React.useState('createdAt');
-  const [order, setOrder] = React.useState('desc');
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
-  const [statusMenu, setStatusMenu] = React.useState({ anchorEl: null, id: null });
+export default function ManageBookings() {
+  const [bookings, setBookings] = useState(() => mapBookings(getAllBookings()));
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [selected, setSelected] = useState([]);
+  const [selectedBooking, setSelectedBooking] = useState(null); // For drawer/modal
+  const [orderBy, setOrderBy] = useState('createdAt');
+  const [order, setOrder] = useState('desc');
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [toast, setToast] = useState(null);
+  const [actionMenuOpen, setActionMenuOpen] = useState(null); // ID of booking with open menu
 
-  // Debounce search input
-  React.useEffect(() => {
-    const t = setTimeout(() => setDebouncedQuery(query), 250);
-    return () => clearTimeout(t);
-  }, [query]);
+  // Close toast after 3 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const filtered = bookings.filter(b => {
-    const matchesQuery = [b.id, b.customer, b.destination].join(' ').toLowerCase().includes(debouncedQuery.toLowerCase());
-    const matchesStatus = status === 'All' ? true : b.status === status;
+    const matchesQuery = [b.id, b.customer, b.destination].join(' ').toLowerCase().includes(query.toLowerCase());
+    const matchesStatus = statusFilter === 'All' ? true : b.status === statusFilter;
     return matchesQuery && matchesStatus;
   });
 
@@ -86,235 +58,308 @@ export default function ManageBookings({ standalone = true }) {
   };
 
   const sorted = [...filtered].sort(sortComparator);
-  const paged = sorted.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  const totalPages = Math.ceil(sorted.length / rowsPerPage);
+  const paged = sorted.slice((page - 1) * rowsPerPage, page * rowsPerPage);
 
   const toggleSelect = (id) => {
     setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const allSelected = filtered.length > 0 && selected.length === filtered.length;
   const toggleSelectAll = () => {
-    setSelected(allSelected ? [] : filtered.map(b => b.id));
+    setSelected(selected.length === filtered.length ? [] : filtered.map(b => b.id));
+  };
+
+  const handleSort = (field) => {
+    if (orderBy === field) {
+      setOrder(order === 'asc' ? 'desc' : 'asc');
+    } else {
+      setOrderBy(field);
+      setOrder('asc');
+    }
+  };
+
+  const updateStatus = (id, newStatus) => {
+    setBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b));
+    try { updateBooking(id, { status: newStatus }); } catch { }
+    setToast({ type: 'success', message: `Booking updated to ${newStatus}` });
+    setActionMenuOpen(null);
   };
 
   const bulkUpdate = (newStatus) => {
     setBookings(prev => prev.map(b => selected.includes(b.id) ? { ...b, status: newStatus } : b));
-    selected.forEach((id) => {
-      try { updateBooking(id, { status: newStatus }); } catch {}
+    selected.forEach(id => {
+      try { updateBooking(id, { status: newStatus }); } catch { }
     });
     setSelected([]);
-    setToast({ severity: 'success', message: `Updated ${selected.length} booking(s) to ${newStatus}` });
+    setToast({ type: 'success', message: `Updated ${selected.length} bookings to ${newStatus}` });
   };
 
-  const openDetails = (b) => setDrawer({ open: true, booking: b });
-  const closeDetails = () => setDrawer({ open: false, booking: null });
-
-  const handleRequestSort = (property) => () => {
-    const isAsc = orderBy === property && order === 'asc';
-    setOrder(isAsc ? 'desc' : 'asc');
-    setOrderBy(property);
-  };
-
-  const handleChangePage = (_, newPage) => setPage(newPage);
-  const handleChangeRowsPerPage = (e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); };
-
-  const openStatusMenu = (event, id) => setStatusMenu({ anchorEl: event.currentTarget, id });
-  const closeStatusMenu = () => setStatusMenu({ anchorEl: null, id: null });
-  const setStatusInline = (newStatus) => {
-    setBookings(prev => prev.map(b => b.id === statusMenu.id ? { ...b, status: newStatus } : b));
-    try { if (statusMenu.id) updateBooking(statusMenu.id, { status: newStatus }); } catch {}
-    setToast({ severity: 'success', message: `Status updated to ${newStatus}` });
-    closeStatusMenu();
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Confirmed': return 'bg-green-100 text-green-700 border-green-200';
+      case 'Pending': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'Cancelled': return 'bg-red-100 text-red-700 border-red-200';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
   };
 
   return (
-    <Box sx={{ minHeight: 'calc(100vh - 120px)', backgroundColor: 'var(--bg)' }}>
-      {standalone && (
-        <>
-          <AppBar position="fixed" color="inherit" elevation={0} sx={{ borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
-            <Toolbar>
-              <Typography variant="h6" sx={{ fontWeight: 600, color: 'var(--text)' }}>
-                Manage Bookings
-              </Typography>
-            </Toolbar>
-          </AppBar>
-          <Toolbar />
-        </>
-      )}
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-text-primary">Manage Bookings</h1>
+          <p className="text-text-secondary">View and manage all customer bookings.</p>
+        </div>
+        <div className="flex gap-2">
+          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium hover:bg-gray-50 text-text-secondary">
+            <Download size={16} /> Export CSV
+          </button>
+        </div>
+      </div>
 
-      <Box sx={{ p: 3 }}>
-        <Fade in timeout={300}>
-          <Paper sx={{ p: 2, mb: 2, borderRadius: '20px', border: '1px solid var(--border)', boxShadow: '0 3px 10px rgba(0,0,0,0.06)' }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <TextField fullWidth label="Search (ID, Customer, Destination)" value={query} onChange={(e) => setQuery(e.target.value)} />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField select fullWidth label="Status" value={status} onChange={(e) => setStatus(e.target.value)}>
-                {['All', ...STATUSES].map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-              </TextField>
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <Stack direction="row" spacing={1}>
-                {STATUSES.map(s => (
-                  <Button key={s} variant="outlined" onClick={() => bulkUpdate(s)} disabled={selected.length === 0}>{s}</Button>
-                ))}
-              </Stack>
-            </Grid>
-          </Grid>
-          </Paper>
-        </Fade>
-
-        <Fade in timeout={350}>
-          <Paper sx={{ borderRadius: '20px', border: '1px solid var(--border)', overflow: 'hidden', boxShadow: '0 3px 10px rgba(0,0,0,0.05)' }}>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell padding="checkbox"><Checkbox checked={allSelected} onChange={toggleSelectAll} /></TableCell>
-                <TableCell sortDirection={orderBy === 'id' ? order : false}>
-                  <TableSortLabel active={orderBy === 'id'} direction={orderBy === 'id' ? order : 'asc'} onClick={handleRequestSort('id')}>ID</TableSortLabel>
-                </TableCell>
-                <TableCell sortDirection={orderBy === 'customer' ? order : false}>
-                  <TableSortLabel active={orderBy === 'customer'} direction={orderBy === 'customer' ? order : 'asc'} onClick={handleRequestSort('customer')}>Customer</TableSortLabel>
-                </TableCell>
-                <TableCell sortDirection={orderBy === 'destination' ? order : false}>
-                  <TableSortLabel active={orderBy === 'destination'} direction={orderBy === 'destination' ? order : 'asc'} onClick={handleRequestSort('destination')}>Destination</TableSortLabel>
-                </TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell align="right" sortDirection={orderBy === 'amount' ? order : false}>
-                  <TableSortLabel active={orderBy === 'amount'} direction={orderBy === 'amount' ? order : 'asc'} onClick={handleRequestSort('amount')}>Amount</TableSortLabel>
-                </TableCell>
-                <TableCell align="right" sortDirection={orderBy === 'createdAt' ? order : false}>
-                  <TableSortLabel active={orderBy === 'createdAt'} direction={orderBy === 'createdAt' ? order : 'asc'} onClick={handleRequestSort('createdAt')}>Created</TableSortLabel>
-                </TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {paged.map(b => (
-                <TableRow key={b.id} hover sx={{ transition: 'transform 0.2s ease, background 0.2s ease', '&:hover': { transform: 'translateY(-2px)', backgroundColor: 'action.hover' } }}>
-                  <TableCell padding="checkbox">
-                    <Checkbox checked={selected.includes(b.id)} onChange={() => toggleSelect(b.id)} />
-                  </TableCell>
-                  <TableCell>{b.id}</TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Avatar sx={{ width: 28, height: 28 }}>
-                        {String(b.customer || '')
-                          .split(' ')
-                          .map((s) => s[0])
-                          .join('')
-                          .slice(0, 2)
-                          .toUpperCase() || 'CU'}
-                      </Avatar>
-                      <Typography variant="body2">{b.customer}</Typography>
-                    </Stack>
-                  </TableCell>
-                  <TableCell>{b.destination}</TableCell>
-                  <TableCell>
-                    <Chip
-                      size="small"
-                      label={b.status}
-                      color={b.status === 'Confirmed' ? 'success' : b.status === 'Pending' ? 'warning' : 'default'}
-                      variant={b.status === 'Cancelled' ? 'outlined' : 'filled'}
-                      onClick={(e) => openStatusMenu(e, b.id)}
-                    />
-                  </TableCell>
-                  <TableCell align="right">₹{(b.amount || 0).toLocaleString()}</TableCell>
-                  <TableCell align="right">{new Date(b.createdAt).toLocaleDateString()}</TableCell>
-                  <TableCell align="right">
-                    <Tooltip title="More actions">
-                      <IconButton size="small" onClick={() => openDetails(b)}>
-                        <MoreVertIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {filtered.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={8} align="center">No bookings found</TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-          <TablePagination
-            component="div"
-            count={sorted.length}
-            page={page}
-            onPageChange={handleChangePage}
-            rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            rowsPerPageOptions={[5, 10, 25]}
+      {/* Filters and Search */}
+      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="relative w-full md:w-96">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            placeholder="Search by ID, Customer, or Destination..."
+            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
           />
-          </Paper>
-        </Fade>
-      </Box>
+        </div>
 
-      <Drawer
-        anchor="right"
-        open={drawer.open}
-        onClose={closeDetails}
-        PaperProps={{ sx: { width: { xs: '100%', sm: 420 } } }}
-      >
-        <Box sx={{ p: 2 }}>
-          <Typography variant="h6">Booking Details</Typography>
-          <Divider sx={{ my: 2 }} />
-          {drawer.booking && (
-            <Stack spacing={1}>
-              <Typography><b>ID:</b> {drawer.booking.id}</Typography>
-              <Typography><b>Customer:</b> {drawer.booking.customer}</Typography>
-              <Typography><b>Destination:</b> {drawer.booking.destination}</Typography>
-              <Typography><b>Status:</b> {drawer.booking.status}</Typography>
-              <Typography><b>Amount:</b> ₹{(drawer.booking.amount || 0).toLocaleString()}</Typography>
-              <Typography color="text.secondary">
-                Created: {new Date(drawer.booking.createdAt).toLocaleString()}
-              </Typography>
-              <Divider sx={{ my: 1 }} />
-              <Typography variant="subtitle2">Quick Update</Typography>
-              <Stack direction="row" spacing={1}>
-                {STATUSES.map((s) => (
-                  <Button
-                    key={s}
-                    variant="contained"
-                    size="small"
-                    onClick={() => {
-                      setBookings((prev) =>
-                        prev.map((x) =>
-                          x.id === drawer.booking.id ? { ...x, status: s } : x
-                        )
-                      );
-                      try {
-                        updateBooking(drawer.booking.id, { status: s });
-                      } catch {}
-                      setToast({ severity: 'success', message: `Status updated to ${s}` });
-                    }}
-                  >
-                    {s}
-                  </Button>
-                ))}
-              </Stack>
-            </Stack>
+        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+          <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-xl border border-gray-200">
+            {['All', 'Pending', 'Confirmed', 'Cancelled'].map(s => (
+              <button
+                key={s}
+                onClick={() => setStatusFilter(s)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${statusFilter === s ? 'bg-white shadow text-text-primary' : 'text-text-secondary hover:text-text-primary'
+                  }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+
+          {selected.length > 0 && (
+            <div className="flex items-center gap-2 pl-4 border-l border-gray-200">
+              <span className="text-xs font-semibold text-text-secondary">{selected.length} selected</span>
+              <div className="flex gap-1">
+                <button onClick={() => bulkUpdate('Confirmed')} className="p-1.5 bg-green-100 text-green-600 rounded-lg hover:bg-green-200" title="Mark Confirmed"><Check size={16} /></button>
+                <button onClick={() => bulkUpdate('Cancelled')} className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200" title="Mark Cancelled"><X size={16} /></button>
+              </div>
+            </div>
           )}
-        </Box>
-      </Drawer>
+        </div>
+      </div>
 
-      <Snackbar open={!!toast} autoHideDuration={2500} onClose={() => setToast(null)}>
-        {toast && (
-          <Alert severity={toast.severity} variant="filled">
-            {toast.message}
-          </Alert>
+      {/* Table */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-50/50 border-b border-gray-100 text-xs uppercase text-text-secondary font-semibold">
+                <th className="p-4 w-10">
+                  <input type="checkbox" className="rounded border-gray-300 text-brand focus:ring-brand" checked={selected.length === filtered.length && filtered.length > 0} onChange={toggleSelectAll} />
+                </th>
+                <th className="p-4 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('id')}>
+                  <div className="flex items-center gap-1">ID {orderBy === 'id' && (order === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}</div>
+                </th>
+                <th className="p-4 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('customer')}>
+                  <div className="flex items-center gap-1">Customer {orderBy === 'customer' && (order === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}</div>
+                </th>
+                <th className="p-4 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('destination')}>
+                  <div className="flex items-center gap-1">Destination {orderBy === 'destination' && (order === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}</div>
+                </th>
+                <th className="p-4">Status</th>
+                <th className="p-4 text-right cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('amount')}>
+                  <div className="flex items-center justify-end gap-1">Amount {orderBy === 'amount' && (order === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}</div>
+                </th>
+                <th className="p-4 text-right cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('createdAt')}>
+                  <div className="flex items-center justify-end gap-1">Date {orderBy === 'createdAt' && (order === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}</div>
+                </th>
+                <th className="p-4 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {paged.map((booking) => (
+                <tr key={booking.id} className="hover:bg-gray-50/50 transition-colors group">
+                  <td className="p-4">
+                    <input type="checkbox" className="rounded border-gray-300 text-brand focus:ring-brand" checked={selected.includes(booking.id)} onChange={() => toggleSelect(booking.id)} />
+                  </td>
+                  <td className="p-4 font-medium text-text-primary">#{booking.id.slice(0, 8)}...</td>
+                  <td className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center text-brand font-bold text-xs">
+                        {booking.customer.substring(0, 2).toUpperCase()}
+                      </div>
+                      <span className="text-sm font-medium text-text-primary">{booking.customer}</span>
+                    </div>
+                  </td>
+                  <td className="p-4 text-text-secondary text-sm">{booking.destination}</td>
+                  <td className="p-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(booking.status)}`}>
+                      {booking.status}
+                    </span>
+                  </td>
+                  <td className="p-4 text-right font-medium text-text-primary">₹{booking.amount.toLocaleString()}</td>
+                  <td className="p-4 text-right text-text-secondary text-sm">{new Date(booking.createdAt).toLocaleDateString()}</td>
+                  <td className="p-4">
+                    <div className="relative flex justify-center">
+                      <button
+                        onClick={() => setActionMenuOpen(actionMenuOpen === booking.id ? null : booking.id)}
+                        className="p-1.5 rounded-lg hover:bg-gray-100 text-text-secondary"
+                      >
+                        <MoreVertical size={16} />
+                      </button>
+
+                      {/* Dropdown Menu */}
+                      <AnimatePresence>
+                        {actionMenuOpen === booking.id && (
+                          <>
+                            <div className="fixed inset-0 z-10" onClick={() => setActionMenuOpen(null)}></div>
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.95 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.95 }}
+                              className="absolute right-0 top-full mt-1 w-40 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden"
+                            >
+                              <div className="p-1">
+                                <button onClick={() => updateStatus(booking.id, 'Confirmed')} className="w-full text-left px-3 py-2 text-sm text-green-600 hover:bg-green-50 rounded-lg flex items-center gap-2">
+                                  <Check size={14} /> Confirm
+                                </button>
+                                <button onClick={() => updateStatus(booking.id, 'Cancelled')} className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg flex items-center gap-2">
+                                  <X size={14} /> Cancel
+                                </button>
+                                <div className="h-px bg-gray-100 my-1"></div>
+                                <button onClick={() => { setSelectedBooking(booking); setActionMenuOpen(null); }} className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:bg-gray-50 rounded-lg">
+                                  View Details
+                                </button>
+                              </div>
+                            </motion.div>
+                          </>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {paged.length === 0 && (
+                <tr>
+                  <td colspan="8" className="p-8 text-center text-text-muted">
+                    No bookings found matching your criteria.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="p-4 border-t border-gray-100 flex items-center justify-between">
+          <div className="text-sm text-text-secondary">
+            Showing <span className="font-medium">{(page - 1) * rowsPerPage + 1}</span> to <span className="font-medium">{Math.min(page * rowsPerPage, sorted.length)}</span> of <span className="font-medium">{sorted.length}</span> results
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page === 1}
+              className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <span className="text-sm font-medium px-2">Page {page} of {totalPages || 1}</span>
+            <button
+              onClick={() => setPage(Math.min(totalPages, page + 1))}
+              disabled={page === totalPages || totalPages === 0}
+              className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* View Details Modal (Simplistic for now) */}
+      <AnimatePresence>
+        {selectedBooking && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+            >
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-text-primary">Booking Details</h2>
+                    <p className="text-sm text-text-secondary"># {selectedBooking.id}</p>
+                  </div>
+                  <button onClick={() => setSelectedBooking(null)} className="p-2 hover:bg-gray-100 rounded-lg">
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 bg-gray-50 rounded-xl">
+                      <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold">Customer</p>
+                      <p className="font-medium text-text-primary mt-1 text-sm">{selectedBooking.customer}</p>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-xl">
+                      <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold">Amount</p>
+                      <p className="font-medium text-text-primary mt-1 text-sm">₹{selectedBooking.amount.toLocaleString()}</p>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-gray-50 rounded-xl">
+                    <p className="text-xs text-text-secondary uppercase tracking-wider font-semibold">Destination</p>
+                    <p className="font-medium text-text-primary mt-1 text-sm">{selectedBooking.destination}</p>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 border border-gray-200 rounded-xl">
+                    <span className="text-sm font-medium text-text-secondary">Current Status</span>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(selectedBooking.status)}`}>
+                      {selectedBooking.status}
+                    </span>
+                  </div>
+
+                  <div className="pt-4 flex gap-3">
+                    <button onClick={() => { updateStatus(selectedBooking.id, 'Confirmed'); setSelectedBooking(null); }} className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium text-sm transition-colors">
+                      Confirm Booking
+                    </button>
+                    <button onClick={() => { updateStatus(selectedBooking.id, 'Cancelled'); setSelectedBooking(null); }} className="flex-1 py-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 rounded-xl font-medium text-sm transition-colors">
+                      Cancel Booking
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         )}
-      </Snackbar>
+      </AnimatePresence>
 
-      <Menu anchorEl={statusMenu.anchorEl} open={Boolean(statusMenu.anchorEl)} onClose={closeStatusMenu}>
-        {STATUSES.map((s) => (
-          <MenuItem key={s} onClick={() => setStatusInline(s)}>
-            {s}
-          </MenuItem>
-        ))}
-      </Menu>
-    </Box>
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className={`fixed bottom-6 right-6 px-6 py-4 rounded-xl shadow-xl z-50 flex items-center gap-3 ${toast.type === 'success' ? 'bg-gray-900 text-white' : 'bg-red-600 text-white'
+              }`}
+          >
+            {toast.type === 'success' ? <Check size={20} className="text-green-400" /> : <X size={20} />}
+            <span className="font-medium">{toast.message}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 

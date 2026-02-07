@@ -1,37 +1,20 @@
-// src/pages/user/MyBookings.js
 import React, { useEffect, useMemo, useState } from 'react';
-
-import {
-  Box,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Snackbar,
-  Alert,
-  Chip,
-  Stack,
-  Fade,
-  Slide,
-  TextField,
-} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getAllBookings, updateBooking } from '../../services/bookingService';
 import { addAdminNotification } from '../../services/notificationService';
-
-const Transition = React.forwardRef(function Transition(props, ref) {
-  return <Slide direction="down" ref={ref} {...props} />;
-});
+import {
+  Calendar,
+  MapPin,
+  AlertCircle,
+  FileText,
+  Plane,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Info
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function MyBookings() {
   const { user } = useAuth();
@@ -39,7 +22,7 @@ export default function MyBookings() {
   const [rows, setRows] = useState([]);
   const [confirmId, setConfirmId] = useState(null);
   const [refundReason, setRefundReason] = useState('');
-  const [snack, setSnack] = useState({ open: false, msg: '', severity: 'success' });
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     const all = getAllBookings();
@@ -54,8 +37,8 @@ export default function MyBookings() {
         b.status === 'Cancelled'
           ? 'Cancelled'
           : b.status === 'Confirmed'
-          ? 'Completed'
-          : 'Upcoming',
+            ? 'Completed'
+            : 'Upcoming',
       refundRequested: !!b.refundRequested,
       refundStatus: b.refundStatus || null,
       daysUntil: (() => {
@@ -105,162 +88,195 @@ export default function MyBookings() {
       } catch {
         // ignore notification errors
       }
-    } catch {}
+    } catch { }
 
-    setSnack({ open: true, msg: 'Booking Cancelled Successfully', severity: 'success' });
+    setToast({ type: 'success', message: 'Booking Cancelled Successfully' });
     setRefundReason('');
     setConfirmId(null);
   };
 
+  // Auto-dismiss toast
+  useEffect(() => {
+    if (toast) {
+      const t = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [toast]);
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Upcoming': return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'Completed': return 'bg-green-100 text-green-700 border-green-200';
+      case 'Cancelled': return 'bg-red-100 text-red-700 border-red-200';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+
   return (
-    <Fade in timeout={300}>
-      <Box sx={{ maxWidth: 1100, mx: 'auto', p: { xs: 1.5, md: 2 } }}>
-        <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
-          My Bookings
-        </Typography>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-text-primary">My Bookings</h1>
+        <p className="text-text-secondary">Manage and view your travel reservations.</p>
+      </div>
 
-        {!hasData ? (
-          <Paper
-            sx={{
-              p: 4,
-              textAlign: 'center',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius)',
-            }}
+      {!hasData ? (
+        <div className="bg-white p-12 rounded-2xl border border-dashed border-gray-200 text-center">
+          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+            <Plane size={32} />
+          </div>
+          <h3 className="text-lg font-bold text-text-primary mb-2">No Bookings Yet</h3>
+          <p className="text-text-secondary mb-6">You haven't booked any trips yet. Start your journey today!</p>
+          <button
+            onClick={() => navigate('/tours')}
+            className="px-6 py-2 bg-brand text-white rounded-xl font-medium shadow-lg hover:bg-brand-dark transition-all"
           >
-            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-              You haven’t booked any trips yet!
-            </Typography>
-          </Paper>
-        ) : (
-          <TableContainer
-            component={Paper}
-            sx={{
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius)',
-              overflow: 'hidden',
-              boxShadow: '0 3px 10px rgba(0,0,0,0.05)',
-            }}
-          >
-            <Table>
-              <TableHead>
-                <TableRow sx={{ '& th': { fontWeight: 600 } }}>
-                  <TableCell>Package Name</TableCell>
-                  <TableCell>Destination</TableCell>
-                  <TableCell>Travel Date</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell align="right">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
+            Explore Destinations
+          </button>
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50/50 border-b border-gray-100 text-xs uppercase text-text-secondary font-semibold">
+                  <th className="p-4">Package Name</th>
+                  <th className="p-4">Destination</th>
+                  <th className="p-4">Travel Date</th>
+                  <th className="p-4">Status</th>
+                  <th className="p-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
                 {rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    hover
-                    sx={{
-                      transition: 'transform 0.2s ease, background 0.2s ease',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        backgroundColor: 'action.hover',
-                      },
-                    }}
-                  >
-                    <TableCell>{row.packageName}</TableCell>
-                    <TableCell>{row.destination}</TableCell>
-                    <TableCell>{row.date}</TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                        <Chip
-                          label={row.status}
-                          size="small"
-                          color={
-                            row.status === 'Upcoming'
-                              ? 'primary'
-                              : row.status === 'Completed'
-                              ? 'success'
-                              : 'default'
-                          }
-                          variant={row.status === 'Cancelled' ? 'outlined' : 'filled'}
-                        />
-                        {row.status === 'Upcoming' &&
-                          typeof row.daysUntil === 'number' &&
-                          row.daysUntil >= 0 && (
-                            <Typography variant="caption" color="text.secondary">
-                              {row.daysUntil === 0
-                                ? 'Trip is today'
-                                : `Trip in ${row.daysUntil} day(s)`}
-                            </Typography>
-                          )}
-                        {row.status === 'Cancelled' && row.refundRequested && (
-                          <Typography variant="caption" color="text.secondary">
-                            Refund requested
-                          </Typography>
+                  <tr key={row.id} className="hover:bg-gray-50/50 transition-colors group">
+                    <td className="p-4 font-medium text-text-primary">{row.packageName}</td>
+                    <td className="p-4 text-text-secondary">
+                      <div className="flex items-center gap-1.5">
+                        <MapPin size={14} /> {row.destination}
+                      </div>
+                    </td>
+                    <td className="p-4 text-text-secondary">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar size={14} /> {row.date}
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex flex-col items-start gap-1">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(row.status)}`}>
+                          {row.status}
+                        </span>
+                        {row.status === 'Upcoming' && typeof row.daysUntil === 'number' && row.daysUntil >= 0 && (
+                          <span className="text-xs text-text-secondary flex items-center gap-1">
+                            <Clock size={10} /> {row.daysUntil === 0 ? 'Today' : `In ${row.daysUntil} days`}
+                          </span>
                         )}
-                      </Box>
-                    </TableCell>
-                    <TableCell align="right">
-                      <Stack direction="row" spacing={1} justifyContent="flex-end">
-                        <Button
-                          size="small"
-                          variant="outlined"
+                        {row.status === 'Cancelled' && row.refundRequested && (
+                          <span className="text-xs text-orange-600 flex items-center gap-1">
+                            <Info size={10} /> Refund requested
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
                           onClick={() => navigate(`/booking/${row.id}/invoice`)}
+                          className="p-2 text-text-secondary hover:text-brand hover:bg-brand/5 rounded-lg transition-colors"
+                          title="View Invoice"
                         >
-                          View Invoice
-                        </Button>
-
-                        <Button
-                          size="small"
-                          color="error"
-                          variant="contained"
-                          disabled={row.status !== 'Upcoming'}
-                          onClick={() => handleCancel(row.id)}
-                        >
-                          Cancel Booking
-                        </Button>
-                      </Stack>
-                    </TableCell>
-                  </TableRow>
+                          <FileText size={18} />
+                        </button>
+                        {row.status === 'Upcoming' && (
+                          <button
+                            onClick={() => handleCancel(row.id)}
+                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Cancel Booking"
+                          >
+                            <XCircle size={18} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
-        <Dialog open={!!confirmId} onClose={() => setConfirmId(null)} TransitionComponent={Transition}>
-          <DialogTitle>Cancel this booking?</DialogTitle>
-          <DialogContent>
-            <Typography sx={{ mb: 2 }}>
-              Are you sure you want to cancel this booking? This action cannot be undone.
-            </Typography>
-            <TextField
-              fullWidth
-              label="Reason for refund (optional)"
-              multiline
-              minRows={2}
-              value={refundReason}
-              onChange={(e) => setRefundReason(e.target.value)}
+      {/* Cancellation Modal */}
+      <AnimatePresence>
+        {confirmId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setConfirmId(null)}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             />
-          </DialogContent>
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden z-10"
+            >
+              <div className="p-6">
+                <div className="flex items-center gap-3 mb-4 text-red-600">
+                  <div className="p-2 bg-red-50 rounded-full">
+                    <AlertCircle size={24} />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900">Cancel Booking?</h3>
+                </div>
 
-          <DialogActions>
-            <Button onClick={() => setConfirmId(null)}>No</Button>
-            <Button color="error" variant="contained" onClick={confirmCancel}>
-              Yes, Cancel
-            </Button>
-          </DialogActions>
-        </Dialog>
+                <p className="text-text-secondary mb-4">
+                  Are you sure you want to cancel this booking? This action cannot be undone.
+                  Please provide a reason for the cancellation if you'd like to request a refund.
+                </p>
 
-        <Snackbar
-          open={snack.open}
-          autoHideDuration={3000}
-          onClose={() => setSnack({ ...snack, open: false })}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        >
-          <Alert severity={snack.severity} variant="filled">
-            {snack.msg}
-          </Alert>
-        </Snackbar>
-      </Box>
-    </Fade>
+                <textarea
+                  value={refundReason}
+                  onChange={(e) => setRefundReason(e.target.value)}
+                  placeholder="Reason for cancellation (optional)..."
+                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none text-sm min-h-[100px] mb-6"
+                />
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setConfirmId(null)}
+                    className="px-4 py-2 text-text-secondary hover:bg-gray-100 rounded-xl font-medium transition-colors"
+                  >
+                    Keep Booking
+                  </button>
+                  <button
+                    onClick={confirmCancel}
+                    className="px-4 py-2 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 shadow-lg shadow-red-600/20 transition-all"
+                  >
+                    Yes, Cancel
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Toast */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className={`fixed bottom-6 right-6 px-6 py-4 rounded-xl shadow-xl z-50 flex items-center gap-3 ${toast.type === 'success' ? 'bg-gray-900 text-white' : 'bg-red-600 text-white'
+              }`}
+          >
+            {toast.type === 'success' ? <CheckCircle size={20} className="text-green-400" /> : <AlertCircle size={20} />}
+            <span className="font-medium">{toast.message}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }

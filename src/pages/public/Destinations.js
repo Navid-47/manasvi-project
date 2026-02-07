@@ -30,7 +30,7 @@ const Destinations = () => {
   }, [searchParams]);
 
   // Data: 26 famous tourism destinations (unique images per destination)
-  const allDestinations = [
+  const allDestinations = useMemo(() => [
     {
       id: 1,
       name: 'Swiss Alps',
@@ -605,7 +605,7 @@ const Destinations = () => {
       bestTime: 'Mar to May, Sep to Nov',
       currency: 'USD'
     }
-  ];
+  ], []);
 
   const categories = ['All', 'Mountain', 'Beach', 'City', 'Island', 'Nature', 'Cultural'];
 

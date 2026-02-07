@@ -1,24 +1,17 @@
 import React, { useState } from 'react';
-import {
-  Drawer,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Toolbar,
-  Box,
-  Tooltip,
-} from '@mui/material';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import EventNoteIcon from '@mui/icons-material/EventNote';
-import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
-import PersonIcon from '@mui/icons-material/Person';
-import LogoutIcon from '@mui/icons-material/Logout';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-
-const collapsedWidth = 72;
-const expandedWidth = 260;
+import {
+  User,
+  LayoutDashboard,
+  Calendar,
+  CreditCard,
+  Wallet,
+  LogOut,
+  ChevronRight,
+  ChevronLeft
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Sidebar({ onLogout }) {
   const navigate = useNavigate();
@@ -26,11 +19,11 @@ export default function Sidebar({ onLogout }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const items = [
-    { to: '/user-dashboard/profile', icon: <PersonIcon />, label: 'Profile' },
-    { to: '/user-dashboard', icon: <DashboardIcon />, label: 'Overview' },
-    { to: '/user-dashboard/bookings', icon: <EventNoteIcon />, label: 'My Bookings' },
-    { to: '/user-dashboard/payments', icon: <ReceiptLongIcon />, label: 'Payment History' },
-    { to: '/user-dashboard/wallet', icon: <ReceiptLongIcon />, label: 'My Wallet' },
+    { to: '/user-dashboard', icon: LayoutDashboard, label: 'Overview', end: true },
+    { to: '/user-dashboard/bookings', icon: Calendar, label: 'My Bookings' },
+    { to: '/user-dashboard/payments', icon: CreditCard, label: 'Payment History' },
+    { to: '/user-dashboard/wallet', icon: Wallet, label: 'My Wallet' },
+    { to: '/user-dashboard/profile', icon: User, label: 'Profile' },
   ];
 
   const handleLogout = () => {
@@ -44,92 +37,74 @@ export default function Sidebar({ onLogout }) {
   };
 
   return (
-    <Drawer
-      variant="permanent"
+    <motion.div
+      initial={false}
+      animate={{ width: isExpanded ? 260 : 80 }}
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => setIsExpanded(false)}
-      sx={{
-        width: isExpanded ? expandedWidth : collapsedWidth,
-        flexShrink: 0,
-        transition: 'width 0.3s ease',
-        '& .MuiDrawer-paper': {
-          width: isExpanded ? expandedWidth : collapsedWidth,
-          boxSizing: 'border-box',
-          borderRight: '1px solid var(--border)',
-          backgroundColor: 'var(--surface)',
-          position: 'relative',
-          height: 'calc(100vh - 64px)',
-          top: 10,
-          transition: 'width 0.3s ease',
-          overflowX: 'hidden',
-        },
-      }}
+      className="hidden md:flex flex-col h-[calc(100vh-80px)] sticky top-20 bg-white border-r border-gray-100 shadow-sm z-30 transition-all duration-300"
     >
-      <Toolbar />
-      <Box sx={{ overflow: 'hidden', py: 1 }}>
-        <List>
-          {items.map((item) => (
-            <Tooltip
-              key={item.to}
-              title={!isExpanded ? item.label : ''}
-              placement="right"
-              arrow
-            >
-              <ListItemButton
-                component={NavLink}
-                to={item.to}
-                sx={{
-                  borderRadius: 'var(--radius)',
-                  mx: 1,
-                  my: 0.5,
-                  justifyContent: isExpanded ? 'initial' : 'center',
-                  '&.active': {
-                    backgroundColor: 'rgba(var(--brand-rgb), 0.08)',
-                    color: 'var(--brand)',
-                  },
-                }}
-              >
-                <ListItemIcon
-                  sx={{
-                    minWidth: isExpanded ? 40 : 'auto',
-                    color: 'inherit',
-                    justifyContent: 'center',
-                  }}
+      <div className="flex-1 py-6 flex flex-col gap-2 overflow-y-auto overflow-x-hidden">
+        {items.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.end}
+            className={({ isActive }) => `
+              relative flex items-center gap-4 px-6 py-3 mx-3 rounded-xl transition-all duration-300 group
+              ${isActive
+                ? 'bg-brand text-white shadow-lg shadow-brand/25'
+                : 'text-text-secondary hover:bg-gray-50 hover:text-brand'
+              }
+            `}
+          >
+            <item.icon size={22} strokeWidth={2} />
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.span
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="font-medium whitespace-nowrap overflow-hidden"
                 >
-                  {item.icon}
-                </ListItemIcon>
-                {isExpanded && <ListItemText primary={item.label} />}
-              </ListItemButton>
-            </Tooltip>
-          ))}
-          <Tooltip title={!isExpanded ? 'Logout' : ''} placement="right" arrow>
-            <ListItemButton
-              onClick={handleLogout}
-              sx={{
-                borderRadius: 'var(--radius)',
-                mx: 1,
-                my: 0.5,
-                color: 'var(--error)',
-                justifyContent: isExpanded ? 'initial' : 'center',
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 0, 0, 0.08)',
-                },
-              }}
-            >
-              <ListItemIcon
-                sx={{
-                  minWidth: isExpanded ? 40 : 'auto',
-                  color: 'inherit',
-                  justifyContent: 'center',
-                }}
+                  {item.label}
+                </motion.span>
+              )}
+            </AnimatePresence>
+            {!isExpanded && (
+              <div className="absolute left-full ml-4 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                {item.label}
+              </div>
+            )}
+          </NavLink>
+        ))}
+      </div>
+
+      <div className="p-4 border-t border-gray-100">
+        <button
+          onClick={handleLogout}
+          className={`
+            w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300
+            text-red-500 hover:bg-red-50 hover:shadow-sm
+          `}
+        >
+          <LogOut size={22} strokeWidth={2} />
+          <AnimatePresence>
+            {isExpanded && (
+              <motion.span
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2 }}
+                className="font-medium whitespace-nowrap overflow-hidden"
               >
-                <LogoutIcon />
-              </ListItemIcon>
-              {isExpanded && <ListItemText primary="Logout" />}
-            </ListItemButton>
-          </Tooltip>
-        </List>
-      </Box>
-    </Drawer>
+                Logout
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </button>
+      </div>
+    </motion.div>
   );
 }

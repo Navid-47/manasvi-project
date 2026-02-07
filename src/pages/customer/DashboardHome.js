@@ -1,27 +1,30 @@
-// src/pages/user/DashboardHome.js
-import React from 'react';
-
-import {
-  Box,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  CardMedia,
-  Grow,
-  Fade,
-} from '@mui/material';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getAllBookings } from '../../services/bookingService';
+import {
+  Calendar,
+  MapPin,
+  Clock,
+  TrendingUp,
+  CreditCard,
+  ArrowRight,
+  Plane
+} from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function DashboardHome() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const allBookings = getAllBookings();
+  const [allBookings, setAllBookings] = useState([]);
+
+  useEffect(() => {
+    // In a real app, this might be an async call
+    setAllBookings(getAllBookings());
+  }, []);
+
   const email = user?.email;
-  const userBookings = email ? allBookings.filter((b) => b.userEmail === email) : allBookings;
+  const userBookings = email ? allBookings.filter((b) => b.userEmail === email) : [];
 
   const totalBookings = userBookings.length;
   const confirmed = userBookings.filter((b) => b.status === 'Confirmed');
@@ -42,171 +45,167 @@ export default function DashboardHome() {
       return {
         id: b.id,
         packageName: b.packageName || 'Travel Package',
-        destination: b.destination || '',
+        destination: b.destination || 'Unknown Destination',
         date: tripDate.toLocaleDateString(),
         daysUntil,
+        image: b.image || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200'
       };
     })
     .filter((x) => x && x.daysUntil >= 0)
     .sort((a, b) => a.daysUntil - b.daysUntil);
 
   const stats = [
-    { title: 'Total Bookings', value: totalBookings },
-    { title: 'Upcoming Trips', value: upcoming.length },
-    { title: 'Total Spent', value: `₹${totalSpent.toLocaleString()}` },
+    {
+      title: 'Total Bookings',
+      value: totalBookings,
+      icon: Calendar,
+      color: 'bg-blue-50 text-blue-600'
+    },
+    {
+      title: 'Upcoming Trips',
+      value: upcoming.length,
+      icon: Plane,
+      color: 'bg-green-50 text-green-600'
+    },
+    {
+      title: 'Total Spent',
+      value: `₹${totalSpent.toLocaleString()}`,
+      icon: CreditCard,
+      color: 'bg-purple-50 text-purple-600'
+    },
   ];
 
-  const defaultImage =
-    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200';
-  const upcomingCards = upcoming.slice(0, 4).map((b) => ({
-    id: b.id,
-    title: b.packageName,
-    destination: b.destination,
-    date: b.date,
-    daysUntil: b.daysUntil,
-    image: defaultImage,
-  }));
+  const displayName = user?.userName || (user?.email ? user.email.split('@')[0] : 'Traveler');
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1100, mx: 'auto' }}>
-      <Fade in timeout={400}>
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 700,
-            mb: 3,
-            color: 'var(--text)',
-            textAlign: 'center',
-          }}
+    <div className="space-y-8">
+      {/* Welcome Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col md:flex-row md:items-center justify-between gap-4"
+      >
+        <div>
+          <h1 className="text-2xl font-bold text-text-primary">Welcome back, {displayName}!</h1>
+          <p className="text-text-secondary">Here's what's happening with your travel plans.</p>
+        </div>
+        <button
+          onClick={() => navigate('/tours')}
+          className="px-6 py-2.5 bg-brand text-white rounded-xl font-medium shadow-lg shadow-brand/25 hover:bg-brand-dark transition-all transform hover:-translate-y-0.5"
         >
-          Welcome back, Traveler!
-        </Typography>
-      </Fade>
+          Book New Trip
+        </button>
+      </motion.div>
 
-      {/* Stats Section */}
-      <Grid container spacing={3} justifyContent="center" sx={{ mb: 4 }}>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {stats.map((stat, i) => (
-          <Grid item xs={12} sm={6} md={4} key={stat.title}>
-            <Grow in timeout={400 + i * 120}>
-              <Card
-                sx={{
-                  borderRadius: 'var(--radius)',
-                  border: '1px solid var(--border)',
-                  boxShadow: '0 3px 10px rgba(0,0,0,0.08)',
-                  textAlign: 'center',
-                  transition: 'transform 0.25s ease, box-shadow 0.25s ease',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 8px 20px rgba(0,0,0,0.12)',
-                  },
-                }}
-              >
-                <CardContent>
-                  <Typography variant="overline" color="text.secondary">
-                    {stat.title}
-                  </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                    {stat.value}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grow>
-          </Grid>
-        ))}
-      </Grid>
-
-      {/* Upcoming Trips Bar */}
-      <Grow in timeout={500}>
-        <Box
-          sx={{
-            px: 3,
-            py: 1.5,
-            borderRadius: 'var(--radius)',
-            mb: 3,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            boxShadow: '0 4px 10px rgba(0,0,0,0.08)',
-            backgroundColor: '#1976d2',
-            color: '#fff',
-          }}
-        >
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            Upcoming Trips
-          </Typography>
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={() => navigate('/user-dashboard/bookings')}
-            sx={{
-              backgroundColor: '#51F2D9',
-              color: '#000000',
-              textTransform: 'none',
-              '&:hover': { filter: 'brightness(0.95)' },
-            }}
+          <motion.div
+            key={stat.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4"
           >
-            View My Bookings
-          </Button>
-        </Box>
-      </Grow>
-
-      {/* Upcoming Trips Grid (user bookings) */}
-      <Grid container spacing={3} sx={{ mt: 1 }}>
-        {upcomingCards.map((card, i) => (
-          <Grid item xs={12} sm={6} md={3} key={`${card.title}-${i}`}>
-            <Grow in timeout={400 + i * 120}>
-              <Card
-                sx={{
-                  position: 'relative',
-                  borderRadius: 'var(--radius)',
-                  overflow: 'hidden',
-                  height: 240,
-                  boxShadow: '0 6px 14px rgba(0,0,0,0.1)',
-                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                  '&:hover': {
-                    transform: 'translateY(-3px)',
-                    boxShadow: '0 10px 24px rgba(0,0,0,0.14)',
-                  },
-                }}
-              >
-                <CardMedia
-                  component="img"
-                  height="240"
-                  image={card.image}
-                  alt={card.title}
-                  sx={{ filter: 'brightness(0.85)' }}
-                />
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    bottom: 0,
-                    width: '100%',
-                    p: 2,
-                    background:
-                      'linear-gradient(to top, rgba(0,0,0,0.7), transparent)',
-                    color: '#fff',
-                  }}
-                >
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                    {card.title}
-                  </Typography>
-                  <Typography variant="body2">{card.destination}</Typography>
-                  <Typography variant="body2" sx={{ mt: 0.5 }}>
-                    Travel Date: {card.date}
-                  </Typography>
-                  {typeof card.daysUntil === 'number' && card.daysUntil >= 0 && (
-                    <Typography variant="body2" sx={{ mt: 0.5 }}>
-                      {card.daysUntil === 0
-                        ? 'Trip is today'
-                        : `Trip in ${card.daysUntil} day(s)`}
-                    </Typography>
-                  )}
-                </Box>
-              </Card>
-            </Grow>
-          </Grid>
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${stat.color}`}>
+              <stat.icon size={24} strokeWidth={2} />
+            </div>
+            <div>
+              <p className="text-text-secondary text-sm font-medium">{stat.title}</p>
+              <h3 className="text-2xl font-bold text-text-primary">{stat.value}</h3>
+            </div>
+          </motion.div>
         ))}
-      </Grid>
-    </Box>
+      </div>
+
+      {/* Upcoming Trips Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-text-primary flex items-center gap-2">
+            <Clock size={20} className="text-brand" /> Upcoming Trips
+          </h2>
+          <button
+            onClick={() => navigate('/user-dashboard/bookings')}
+            className="text-brand text-sm font-medium hover:underline flex items-center gap-1"
+          >
+            View all <ArrowRight size={16} />
+          </button>
+        </div>
+
+        {upcoming.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-white p-8 rounded-2xl border border-dashed border-gray-200 text-center"
+          >
+            <Plane size={48} className="mx-auto text-gray-300 mb-3" />
+            <p className="text-text-primary font-medium">No upcoming trips planned</p>
+            <p className="text-text-secondary text-sm mb-4">Ready to start your next adventure?</p>
+            <button
+              onClick={() => navigate('/tours')}
+              className="px-4 py-2 border border-brand text-brand rounded-lg text-sm font-medium hover:bg-brand hover:text-white transition-colors"
+            >
+              Explore Packages
+            </button>
+          </motion.div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {upcoming.slice(0, 4).map((trip, i) => (
+              <motion.div
+                key={trip.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 + i * 0.1 }}
+                className="group bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300"
+              >
+                <div className="relative h-40 overflow-hidden">
+                  <img
+                    src={trip.image}
+                    alt={trip.destination}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-bold text-brand shadow-sm">
+                    {trip.daysUntil === 0 ? 'Today!' : `In ${trip.daysUntil} days`}
+                  </div>
+                  <div className="absolute bottom-3 left-3 text-white">
+                    <p className="flex items-center gap-1 text-xs opacity-90"><MapPin size={12} /> {trip.destination}</p>
+                    <h4 className="font-bold text-lg leading-tight truncate w-full pr-4">{trip.packageName}</h4>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <div className="flex justify-between items-center text-sm text-text-secondary mb-3">
+                    <span className="flex items-center gap-1"><Calendar size={14} /> {trip.date}</span>
+                    <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-semibold">Confirmed</span>
+                  </div>
+                  <button
+                    onClick={() => navigate('/user-dashboard/bookings')}
+                    className="w-full py-2 border border-gray-200 text-text-secondary rounded-xl text-sm font-medium hover:bg-gray-50 hover:text-text-primary transition-colors"
+                  >
+                    View Details
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Promo / Banner Area */}
+      <div className="bg-gradient-to-r from-brand to-secondary rounded-2xl p-6 sm:p-10 text-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -ml-16 -mb-16 pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="max-w-xl">
+            <h3 className="text-2xl font-bold mb-2">Invite friends & Earn Rewards</h3>
+            <p className="text-white/80">Share your referral code with friends and get ₹500 off on your next booking when they complete a trip.</p>
+          </div>
+          <button className="px-6 py-3 bg-white text-brand font-bold rounded-xl shadow-lg hover:shadow-xl hover:bg-gray-50 transition-all flex items-center gap-2">
+            <CreditCard size={18} /> Get Referral Code
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

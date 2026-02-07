@@ -1,27 +1,18 @@
-// src/pages/user/PaymentHistory.js
-import React from 'react';
-import {
-  Box,
-  Typography,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Chip,
-  Stack,
-  Fade,
-} from '@mui/material';
+import React, { useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getAllPayments } from '../../services/paymentService';
 import { getAllBookings } from '../../services/bookingService';
+import {
+  CreditCard,
+  Calendar,
+  DollarSign,
+  CheckCircle
+} from 'lucide-react';
 
 export default function PaymentHistory() {
   const { user } = useAuth();
 
-  const { rows, totalSpend } = React.useMemo(() => {
+  const { rows, totalSpend } = useMemo(() => {
     const allPayments = getAllPayments();
     const allBookings = getAllBookings();
     const email = user?.email;
@@ -53,97 +44,83 @@ export default function PaymentHistory() {
     return { rows: mapped, totalSpend: total };
   }, [user]);
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Success': return 'bg-green-100 text-green-700 border-green-200';
+      case 'Failed': return 'bg-red-100 text-red-700 border-red-200';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+
   return (
-    <Fade in timeout={300}>
-      <Box sx={{ maxWidth: 1100, mx: 'auto', p: { xs: 1.5, md: 2 } }}>
-        <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
-          Payment History
-        </Typography>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-text-primary">Payment History</h1>
+        <p className="text-text-secondary">Track your payment transactions and expenses.</p>
+      </div>
 
-        <Stack
-          direction={{ xs: 'column', md: 'row' }}
-          spacing={2}
-          sx={{ mb: 2 }}
-        >
-          <Paper
-            sx={{
-              flex: 1,
-              p: 2,
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius)',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              minHeight: { xs: 120, sm: 130 },
-              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-              },
-            }}
-            elevation={0}
-          >
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Total Spend
-            </Typography>
-            <Typography variant="h5" sx={{ fontWeight: 700 }}>
-              ₹{totalSpend.toLocaleString()}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Based on successful payments
-            </Typography>
-          </Paper>
-        </Stack>
+      {/* Total Spend Card */}
+      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
+            <DollarSign size={24} strokeWidth={2.5} />
+          </div>
+          <div>
+            <p className="text-text-secondary text-sm font-medium">Total Spend</p>
+            <h3 className="text-2xl font-bold text-text-primary">₹{totalSpend.toLocaleString()}</h3>
+          </div>
+        </div>
+        <div className="hidden sm:block text-right">
+          <p className="text-xs text-text-secondary">Based on successful payments</p>
+        </div>
+      </div>
 
-        <TableContainer
-          component={Paper}
-          sx={{
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius)',
-            overflow: 'hidden',
-            boxShadow: '0 3px 10px rgba(0,0,0,0.05)',
-          }}
-        >
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>Transaction ID</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Package Name</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Amount</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Date</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {rows.map((t) => (
-                <TableRow
-                  key={t.id}
-                  hover
-                  sx={{
-                    transition: 'transform 0.2s ease, background 0.2s ease',
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      backgroundColor: 'action.hover',
-                    },
-                  }}
-                >
-                  <TableCell>{t.id}</TableCell>
-                  <TableCell>{t.packageName}</TableCell>
-                  <TableCell>₹{t.amount.toLocaleString()}</TableCell>
-                  <TableCell>{t.date}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={t.status}
-                      color={t.status === 'Success' ? 'success' : 'error'}
-                      size="small"
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
-    </Fade>
+      {/* Transactions Table */}
+      {rows.length === 0 ? (
+        <div className="bg-white p-12 rounded-2xl border border-dashed border-gray-200 text-center">
+          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+            <CreditCard size={32} />
+          </div>
+          <h3 className="text-lg font-bold text-text-primary mb-2">No Transactions Yet</h3>
+          <p className="text-text-secondary">Your payment history will appear here once you make a booking.</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50/50 border-b border-gray-100 text-xs uppercase text-text-secondary font-semibold">
+                  <th className="p-4">Transaction ID</th>
+                  <th className="p-4">Package Name</th>
+                  <th className="p-4">Amount</th>
+                  <th className="p-4">Date</th>
+                  <th className="p-4">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {rows.map((t) => (
+                  <tr key={t.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="p-4 font-mono text-xs text-text-secondary">#{t.id}</td>
+                    <td className="p-4 font-medium text-text-primary">{t.packageName}</td>
+                    <td className="p-4 font-bold text-text-primary">₹{t.amount.toLocaleString()}</td>
+                    <td className="p-4 text-text-secondary text-sm">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar size={14} /> {t.date}
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(t.status)}`}>
+                        {t.status === 'Success' && <CheckCircle size={10} />}
+                        {t.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

@@ -1,183 +1,106 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Box, Typography, Button, useTheme, useMediaQuery } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
 
-const HeroSection = styled(Box)(({ theme }) => ({
-  minHeight: '100vh',
-  background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)',
-  position: 'relative',
-  overflow: 'hidden',
-  display: 'flex',
-  alignItems: 'center',
-  color: theme.palette.common.white,
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'var(--hero-bg-image)',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
-    opacity: 0.4,
-    zIndex: 1,
-    transition: 'opacity 1s ease-in-out',
+const heroImages = [
+  {
+    url: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80',
+    title: 'Discover Amazing Destinations',
+    subtitle: 'Experience the world with our curated travel packages and unforgettable adventures'
   },
-}));
-
-const HeroContent = styled(Box)(({ theme }) => ({
-  position: 'relative',
-  zIndex: 2,
-  padding: theme.spacing(8, 2),
-  textAlign: 'center',
-  maxWidth: '800px',
-  margin: '0 auto',
-  [theme.breakpoints.up('md')]: {
-    padding: theme.spacing(12, 2),
+  {
+    url: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80',
+    title: 'Tropical Beaches',
+    subtitle: 'Relax in paradise with our exclusive beach resort packages'
   },
-}));
-
-const CarouselIndicator = styled(Box)(({ theme }) => ({
-  position: 'absolute',
-  bottom: theme.spacing(8),
-  left: '50%',
-  transform: 'translateX(-50%)',
-  zIndex: 3,
-  display: 'flex',
-  gap: theme.spacing(1),
-}));
-
-const IndicatorDot = styled(Box)(({ theme, active }) => ({
-  width: 12,
-  height: 12,
-  borderRadius: '50%',
-  backgroundColor: active ? theme.palette.primary.main : 'rgba(255, 255, 255, 0.5)',
-  cursor: 'pointer',
-  transition: 'all 0.3s ease',
-  '&:hover': {
-    backgroundColor: theme.palette.primary.light,
-    transform: 'scale(1.2)',
+  {
+    url: 'https://images.unsplash.com/photo-1501555088652-021faa106b9b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80',
+    title: 'Cultural Cities',
+    subtitle: 'Explore vibrant cultures and historical landmarks around the globe'
   },
-}));
+  {
+    url: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80',
+    title: 'Wildlife Adventures',
+    subtitle: 'Witness nature\'s wonders with our expert-guided wildlife tours'
+  }
+];
 
-const Hero = ({ title, subtitle, ctaText, ctaLink }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
-  // Carousel images wrapped in useMemo to prevent re-creation on every render
-  const heroImages = useMemo(() => [
-    {
-      url: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
-      title: 'Discover Amazing Destinations',
-      subtitle: 'Experience the world with our curated travel packages and unforgettable adventures'
-    },
-    {
-      url: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1950&q=80',
-      title: 'Tropical Beaches',
-      subtitle: 'Relax in paradise with our exclusive beach resort packages'
-    },
-    {
-      url: 'https://images.unsplash.com/photo-1501555088652-021faa106b9b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1950&q=80',
-      title: 'Cultural Cities',
-      subtitle: 'Explore vibrant cultures and historical landmarks around the globe'
-    },
-    {
-      url: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1950&q=80',
-      title: 'Wildlife Adventures',
-      subtitle: 'Witness nature\'s wonders with our expert-guided wildlife tours'
-    }
-  ], []);
-
+const Hero = ({ ctaText = "Explore Tours", ctaLink = "/tours" }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentImageIndex((prevIndex) => 
-        prevIndex === heroImages.length - 1 ? 0 : prevIndex + 1
-      );
-    }, 5000);
-
+      setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
+    }, 6000);
     return () => clearInterval(interval);
-  }, [heroImages]);
-
-  // Update CSS variable for background image
-  useEffect(() => {
-    const root = document.documentElement;
-    root.style.setProperty('--hero-bg-image', `url('${heroImages[currentImageIndex].url}')`);
-  }, [currentImageIndex, heroImages]);
-
-  const handleIndicatorClick = (index) => {
-    setCurrentImageIndex(index);
-  };
+  }, []);
 
   return (
-    <HeroSection>
-      <HeroContent>
-        <Typography
-          variant={isMobile ? 'h3' : 'h2'}
-          component="h1"
-          gutterBottom
-          sx={{
-            fontWeight: 700,
-            textShadow: '0 2px 4px rgba(0,0,0,0.3)',
-            lineHeight: 1.2,
-            animation: 'fadeIn 0.8s ease-in-out',
-          }}
+    <div className="relative h-screen w-full overflow-hidden">
+      {/* Background Carousel */}
+      <AnimatePresence mode="popLayout">
+        <motion.div
+          key={currentImageIndex}
+          initial={{ opacity: 0, scale: 1.1 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1.5 }}
+          className="absolute inset-0"
         >
-          {heroImages[currentImageIndex].title}
-        </Typography>
-        <Typography
-          variant={isMobile ? 'h6' : 'h5'}
-          paragraph
-          sx={{
-            mb: 4,
-            textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-            opacity: 0.9,
-            animation: 'fadeIn 0.8s ease-in-out',
-          }}
-        >
-          {heroImages[currentImageIndex].subtitle}
-        </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          size="large"
-          component={Link}
-          to={ctaLink}
-          sx={{
-            px: 6,
-            py: 1.5,
-            fontSize: '1.1rem',
-            fontWeight: 600,
-            textTransform: 'none',
-            borderRadius: 2,
-            boxShadow: '0 4px 14px rgba(25, 118, 210, 0.4)',
-            '&:hover': {
-              boxShadow: '0 6px 20px rgba(25, 118, 210, 0.6)',
-              transform: 'translateY(-2px)',
-            },
-            transition: 'all 0.3s ease',
-            animation: 'fadeIn 0.8s ease-in-out',
-          }}
-        >
-          {ctaText}
-        </Button>
-      </HeroContent>
-      
-      {/* Carousel Indicators */}
-      <CarouselIndicator>
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `url('${heroImages[currentImageIndex].url}')` }}
+          />
+          {/* Overlay gradient */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/70" />
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Content */}
+      <div className="relative h-full container mx-auto px-4 flex flex-col items-center justify-center text-center z-10">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentImageIndex}
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -20, opacity: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="max-w-4xl"
+          >
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold text-white mb-6 leading-tight drop-shadow-lg">
+              {heroImages[currentImageIndex].title}
+            </h1>
+            <p className="text-lg md:text-2xl text-white/90 mb-10 max-w-2xl mx-auto font-light leading-relaxed drop-shadow-md">
+              {heroImages[currentImageIndex].subtitle}
+            </p>
+
+            <Link
+              to={ctaLink}
+              className="group inline-flex items-center gap-3 px-8 py-4 bg-brand hover:bg-white hover:text-brand text-white text-lg font-bold rounded-full transition-all duration-300 transform hover:scale-105 shadow-xl shadow-brand/20"
+            >
+              {ctaText}
+              <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Indicators */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-3 z-20">
         {heroImages.map((_, index) => (
-          <IndicatorDot
+          <button
             key={index}
-            active={index === currentImageIndex}
-            onClick={() => handleIndicatorClick(index)}
+            onClick={() => setCurrentImageIndex(index)}
+            className={`w-3 h-3 rounded-full transition-all duration-500 ${index === currentImageIndex
+                ? 'w-10 bg-brand'
+                : 'bg-white/50 hover:bg-white'
+              }`}
+            aria-label={`Go to slide ${index + 1}`}
           />
         ))}
-      </CarouselIndicator>
-    </HeroSection>
+      </div>
+    </div>
   );
 };
 

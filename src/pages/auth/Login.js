@@ -1,68 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { TextField, Button, Link, Box, Alert, CircularProgress } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-
-import { Email, Lock } from '@mui/icons-material';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Mail, Lock, ArrowRight, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getUserByEmail } from '../../services/userService';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [loginError, setLoginError] = useState('');
-  const [animatedSections, setAnimatedSections] = useState([]);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  useEffect(() => {
-    // Animate sections on load
-    const timer = setTimeout(() => {
-      setAnimatedSections(['form', 'divider', 'social']);
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, []);
-
-  const validateForm = () => {
-    const newErrors = {};
-    
-    if (!email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Email address is invalid';
-    }
-    
-    if (!password) {
-      newErrors.password = 'Password is required';
-    } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-    
+    setError('');
     setIsLoading(true);
-    setLoginError('');
 
-    // Simulate API call
     try {
-      // In a real app, you would authenticate the user here
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 800));
 
       const userRecord = getUserByEmail(email);
       if (!userRecord || String(userRecord.password || '') !== String(password)) {
-        setLoginError('Invalid email or password. Please try again.');
-        return;
+        throw new Error('Invalid email or password');
       }
 
       const role = userRecord.role || 'user';
@@ -71,181 +33,113 @@ const Login = () => {
       login({ id: userRecord.id, email: userRecord.email, role, userName });
 
       const target = role === 'admin' ? '/admin-dashboard' : '/user-dashboard';
-      console.log('Login success →', { email, role, target });
       navigate(target, { state: { loginSuccess: true, userName } });
-    } catch (error) {
-      setLoginError('Invalid email or password. Please try again.');
+    } catch (err) {
+      setError(err.message || 'Something went wrong');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-surface p-10 rounded-xl shadow-lg hover-card animate-fade-in">
-        <div className="text-center animate-slide-in-up">
-          <div className="mx-auto h-16 w-16 rounded-full bg-brand flex items-center justify-center mb-4 hover-scale">
-            <Lock className="h-8 w-8 text-white" />
-          </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-text animate-fade-in">
-            Sign in to your account
-          </h2>
-          <p className="mt-2 text-center text-text-muted animate-fade-in-delay">
-            Enter your credentials to access your account
-          </p>
-        </div>
-        
-        {loginError && (
-          <Alert severity="error" className="mt-4 animate-slide-in-up">
-            {loginError}
-          </Alert>
-        )}
-        
-        <form className="mt-8 space-y-6 animate-slide-in-up" onSubmit={handleSubmit}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <TextField
-              variant="outlined"
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="Email Address"
-              name="email"
-              autoComplete="email"
-              autoFocus
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (errors.email) {
-                  setErrors(prev => ({ ...prev, email: '' }));
-                }
-              }}
-              error={!!errors.email}
-              helperText={errors.email}
-              InputProps={{
-                startAdornment: <Email className="text-text-muted mr-2 hover-scale" />
-              }}
-              className="hover-scale"
-            />
-            <TextField
-              variant="outlined"
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Password"
-              type="password"
-              id="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                if (errors.password) {
-                  setErrors(prev => ({ ...prev, password: '' }));
-                }
-              }}
-              error={!!errors.password}
-              helperText={errors.password}
-              InputProps={{
-                startAdornment: <Lock className="text-text-muted mr-2 hover-scale" />
-              }}
-              className="hover-scale"
-            />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              disabled={isLoading}
-              sx={{
-                backgroundColor: 'var(--brand)',
-                color: 'white',
-                padding: '12px',
-                borderRadius: '8px',
-                fontWeight: 'bold',
-                textTransform: 'none',
-                '&:hover': {
-                  backgroundColor: 'var(--brand-dark)',
-                  transform: 'translateY(-2px)',
-                },
-                '&:disabled': {
-                  backgroundColor: 'var(--brand)',
-                  opacity: 0.7,
-                },
-                transition: 'all 0.3s ease',
-              }}
-              className="hover-brand"
-            >
-              {isLoading ? (
-                <CircularProgress size={24} sx={{ color: 'white' }} />
-              ) : (
-                'Sign In'
-              )}
-            </Button>
-          </Box>
-          <div className="flex items-center justify-between animate-slide-in-up-delay">
-            <Link 
-              href="#" 
-              variant="body2" 
-              sx={{ color: 'var(--brand)' }}
-              onClick={(e) => {
-                e.preventDefault();
-                navigate('/forgot-password');
-              }}
-              className="text-hover"
-            >
-              Forgot password?
-            </Link>
-            <Link 
-              href="#" 
-              variant="body2" 
-              sx={{ color: 'var(--brand)' }}
-              onClick={(e) => {
-                e.preventDefault();
-                navigate('/register');
-              }}
-              className="text-hover"
-            >
-              Don't have an account? Sign Up
-            </Link>
-          </div>
-        </form>
-        
-        <div className={`mt-6 ${animatedSections.includes('divider') ? 'animate-fade-in' : ''}`}>
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border"></div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 relative overflow-hidden">
+      {/* Background Elements */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-gray-900 via-gray-800 to-black opacity-90"></div>
+        <img
+          src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?ixlib=rb-4.0.3&auto=format&fit=crop&w=2021&q=80"
+          alt="Travel Background"
+          className="w-full h-full object-cover opacity-20"
+        />
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-brand rounded-full blur-[128px] opacity-20 animate-pulse-slow"></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-500 rounded-full blur-[128px] opacity-20 animate-pulse-slow delay-1000"></div>
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="relative z-10 w-full max-w-md p-8 bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl"
+      >
+        <div className="text-center mb-8">
+          <Link to="/" className="inline-block mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand to-brand-dark flex items-center justify-center text-white font-bold text-xl shadow-lg mx-auto">
+              TM
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-surface text-text-muted">
-                Or continue with
-              </span>
+          </Link>
+          <h2 className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
+          <p className="text-gray-400 text-sm">Sign in to continue your adventure</p>
+        </div>
+
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-200 text-sm"
+          >
+            <AlertCircle size={18} />
+            {error}
+          </motion.div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-gray-400 ml-1">Email Address</label>
+            <div className="relative group">
+              <Mail className="absolute left-4 top-3.5 text-gray-500 group-focus-within:text-brand transition-colors" size={20} />
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-black/20 border border-white/10 text-white rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-brand/50 focus:ring-1 focus:ring-brand/50 transition-all placeholder:text-gray-600"
+                placeholder="you@example.com"
+              />
             </div>
           </div>
 
-          <div className={`mt-6 ${animatedSections.includes('social') ? 'animate-slide-in-up' : ''}`}>
-            <Button
-              variant="outlined"
-              fullWidth
-              sx={{
-                borderColor: 'var(--border)',
-                color: 'var(--text)',
-                '&:hover': {
-                  borderColor: 'var(--brand)',
-                  backgroundColor: 'var(--brand)/10',
-                  transform: 'translateY(-2px)',
-                },
-                transition: 'all 0.3s ease',
-              }}
-              className="hover-scale"
-            >
-              <svg className="w-5 h-5 hover-scale" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.345-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z"/>
-              </svg>
-              <span className="ml-2 hover-scale">Google</span>
-            </Button>
+          <div className="space-y-1">
+            <div className="flex justify-between ml-1">
+              <label className="text-xs font-semibold text-gray-400">Password</label>
+              <Link to="/forgot-password" സമclassName="text-xs text-brand hover:text-brand-light transition-colors">Forgot Password?</Link>
+            </div>
+            <div className="relative group">
+              <Lock className="absolute left-4 top-3.5 text-gray-500 group-focus-within:text-brand transition-colors" size={20} />
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-black/20 border border-white/10 text-white rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-brand/50 focus:ring-1 focus:ring-brand/50 transition-all placeholder:text-gray-600"
+                placeholder="••••••••"
+              />
+            </div>
           </div>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-gradient-to-r from-brand to-brand-dark text-white font-bold py-3.5 rounded-xl shadow-lg shadow-brand/20 hover:shadow-brand/40 transition-all flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {isLoading ? <Loader2 className="animate-spin" size={20} /> : (
+              <>
+                Sign In <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
+              </>
+            )}
+          </motion.button>
+        </form>
+
+        <div className="mt-8 pt-6 border-t border-white/10 text-center">
+          <p className="text-gray-400 text-sm">
+            Don't have an account?{' '}
+            <Link to="/register" className="text-white font-bold hover:text-brand transition-colors">
+              Create Account
+            </Link>
+          </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

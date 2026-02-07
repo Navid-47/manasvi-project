@@ -1,128 +1,79 @@
-import React, { useState } from 'react';
-import {
-  Drawer,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Toolbar,
-  Box,
-  Tooltip,
-} from '@mui/material';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import EventNoteIcon from '@mui/icons-material/EventNote';
-import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
-import InsightsIcon from '@mui/icons-material/Insights';
-import InventoryIcon from '@mui/icons-material/Inventory2';
-import LogoutIcon from '@mui/icons-material/Logout';
+import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, CalendarRange, Package, CreditCard, TrendingUp, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const collapsedWidth = 72;
-const expandedWidth = 260;
-
-export default function AdminSidebar({ onLogout }) {
+export default function AdminSidebar({ collapsed, mobile, onClose }) {
   const navigate = useNavigate();
-  const [isExpanded, setIsExpanded] = useState(false);
   const { logout } = useAuth();
 
   const items = [
-    { to: '/admin-dashboard', icon: <DashboardIcon />, label: 'Overview' },
-    { to: '/admin-dashboard/bookings', icon: <EventNoteIcon />, label: 'Bookings' },
-    { to: '/admin-dashboard/packages', icon: <InventoryIcon />, label: 'Packages' },
-    { to: '/admin-dashboard/payments', icon: <ReceiptLongIcon />, label: 'Payments' },
-    { to: '/admin-dashboard/analytics', icon: <InsightsIcon />, label: 'Analytics' },
+    { to: '/admin-dashboard', icon: LayoutDashboard, label: 'Overview', end: true },
+    { to: '/admin-dashboard/bookings', icon: CalendarRange, label: 'Bookings' },
+    { to: '/admin-dashboard/packages', icon: Package, label: 'Packages' },
+    { to: '/admin-dashboard/payments', icon: CreditCard, label: 'Payments' },
+    { to: '/admin-dashboard/analytics', icon: TrendingUp, label: 'Analytics' },
   ];
 
   const handleLogout = () => {
     logout();
-    if (onLogout) onLogout();
     navigate('/login');
   };
 
   return (
-    <Drawer
-      variant="permanent"
-      onMouseEnter={() => setIsExpanded(true)}
-      onMouseLeave={() => setIsExpanded(false)}
-      sx={{
-        width: isExpanded ? expandedWidth : collapsedWidth,
-        flexShrink: 0,
-        transition: 'width 0.3s ease',
-        '& .MuiDrawer-paper': {
-          width: isExpanded ? expandedWidth : collapsedWidth,
-          boxSizing: 'border-box',
-          borderRight: '1px solid var(--border)',
-          backgroundColor: 'var(--surface)',
-          position: 'relative',
-          height: 'calc(100vh - 64px)',
-          top: 10,
-          transition: 'width 0.3s ease',
-          overflowX: 'hidden',
-        },
-      }}
-    >
-      <Toolbar />
-      <Box sx={{ overflow: 'hidden', py: 1 }}>
-        <List>
-          {items.map((item) => (
-            <Tooltip key={item.to} title={!isExpanded ? item.label : ''} placement="right" arrow>
-              <ListItemButton
-                component={NavLink}
-                to={item.to}
-                sx={{
-                  borderRadius: 'var(--radius)',
-                  mx: 1,
-                  my: 0.5,
-                  justifyContent: isExpanded ? 'initial' : 'center',
-                  '&.active': {
-                    backgroundColor: 'rgba(var(--brand-rgb), 0.08)',
-                    color: 'var(--brand)',
-                  },
-                }}
-              >
-                <ListItemIcon
-                  sx={{
-                    minWidth: isExpanded ? 40 : 'auto',
-                    color: 'inherit',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {item.icon}
-                </ListItemIcon>
-                {isExpanded && <ListItemText primary={item.label} />}
-              </ListItemButton>
-            </Tooltip>
-          ))}
+    <div className={`h-full flex flex-col py-4 ${mobile ? 'px-4' : 'px-2'}`}>
+      <div className="flex-1 space-y-1">
+        {items.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.end}
+            onClick={onClose}
+            className={({ isActive }) => `
+              relative flex items-center px-3 py-3 rounded-xl transition-all duration-200 group
+              ${isActive
+                ? 'bg-brand/10 text-brand font-medium'
+                : 'text-text-secondary hover:bg-gray-50 hover:text-text-primary'
+              }
+              ${collapsed ? 'justify-center' : ''}
+            `}
+          >
+            <item.icon size={22} strokeWidth={2} className="flex-shrink-0" />
 
-          <Tooltip title={!isExpanded ? 'Logout' : ''} placement="right" arrow>
-            <ListItemButton
-              onClick={handleLogout}
-              sx={{
-                borderRadius: 'var(--radius)',
-                mx: 1,
-                my: 0.5,
-                color: 'var(--error)',
-                justifyContent: isExpanded ? 'initial' : 'center',
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 0, 0, 0.08)',
-                },
-              }}
-            >
-              <ListItemIcon
-                sx={{
-                  minWidth: isExpanded ? 40 : 'auto',
-                  color: 'inherit',
-                  justifyContent: 'center',
-                }}
-              >
-                <LogoutIcon />
-              </ListItemIcon>
-              {isExpanded && <ListItemText primary="Logout" />}
-            </ListItemButton>
-          </Tooltip>
-        </List>
-      </Box>
-    </Drawer>
+            {!collapsed && (
+              <span className="ml-3 truncate">{item.label}</span>
+            )}
+
+            {/* Tooltip for collapsed mode */}
+            {collapsed && (
+              <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity">
+                {item.label}
+              </div>
+            )}
+          </NavLink>
+        ))}
+      </div>
+
+      <div className="pt-4 mt-4 border-t border-gray-100">
+        <button
+          onClick={handleLogout}
+          className={`
+            w-full flex items-center px-3 py-3 rounded-xl transition-all duration-200 group text-red-500 hover:bg-red-50
+            ${collapsed ? 'justify-center' : ''}
+          `}
+        >
+          <LogOut size={22} strokeWidth={2} className="flex-shrink-0" />
+          {!collapsed && (
+            <span className="ml-3 truncate font-medium">Logout</span>
+          )}
+          {/* Tooltip for collapsed mode */}
+          {collapsed && (
+            <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity">
+              Logout
+            </div>
+          )}
+        </button>
+      </div>
+    </div>
   );
 }
